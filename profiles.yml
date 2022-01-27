@@ -1,0 +1,32 @@
+fdr_appuiscommuns:
+  target: prod
+  outputs:
+    dev:
+      type: postgres
+      host: localhost
+      user: fdr
+      password: fdr
+      port: 5432
+      dbname: fdr
+      schema: dbt_fdr
+      threads: 4
+  outputs:
+    staging:
+      type: postgres
+      host: 141.94.244.102
+      user: "youraltereouser"
+      password: "yourpassword"
+      port: 55432
+      dbname: datastore_staging # TODO only test / sample data, same schemas ? or everyone in its own schema like dbt ? or own databae ??
+      schema: appuiscommuns
+      threads: 4
+  outputs:
+    prod:
+      type: postgres
+      host: 141.94.244.102
+      user: "youraltereouser"
+      password: "yourpassword"
+      port: 55432
+      dbname: datastore
+      schema: appuiscommuns
+      threads: 4

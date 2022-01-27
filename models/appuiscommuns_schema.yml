@@ -1,0 +1,68 @@
+version: 2
+
+
+# tests génériques de contrainte de schéma pour le modèle de données du cas d'usage "appuis communs"
+models:
+  - name: sample__appuiscommuns_extract_supportaerien
+    description: la normalisation en supportaerien de la source ...extract...
+    config:
+      tags: ['normalization'] # 'pii' TODO generate from source__type.sql (and rename it)
+    columns:
+      - name: appuiscommunssupp__src_name
+        description: le nom de la source ("table lineage", DBT peut aussi le rajouter)
+        tests:
+          - not_null
+      - name: appuiscommunssupp__src_id
+        description: id de la donnée spécifique à la source
+        tags: ['id', 'unique'] # 'pii' TODO generate from profiling, generate also in source or seed
+        tests:
+          - unique
+          - not_null
+      - name: '"appuiscommunssupp__Id"'
+        description: id (uuid)
+        tags: ['id', 'unique', 'uuid'] # 'pii' TODO generate from profiling & syntax
+        tests:
+          - unique
+          - not_null
+      - name: geometry
+        tests:
+          - unique
+          - not_null
+      - name: appuiscommunssupp__Materiau
+        tags: ['l_appuisaeriens_materiau'] # TODO better naming allowing to generate relationships test and (?) (_)_enriched.sql model, generate from type_definition column name
+        tests:
+          - relationships:
+              to: ref('"l_appuisaeriens_materiau"')
+              field: '"Valeur"'
+      - name: appuiscommunssupp__fdrcommune__insee_id
+        tags: ['fdrcommune__insee_id'] # TODO generate relationships test and (?) (_)_enriched.sql model, generate from type_definition column name
+        tests:
+          - not_null
+          - relationships:
+              to: source('"france-data-reseau"', '"georef-france-commun.csv"')
+              field: '"com_code"'
+
+seeds:
+  - name: appuiscommuns_supportaerien__definition
+    description: définition formelle du type supportaerien (pour l'instant copié manuellement depuis le Gitbook, à terme pourrait générer ce dernier voire un métamodèle guidant l'outillage)
+    config:
+      tags: ["type_definition"]
+  #- name: echantillon:
+  #  tags: ["test"]
+  - name : osmgeodatamine_powersupports_extract
+    description: extrait représentatif des données de la source (type) osmgeodatamine_powersupports
+    config:
+      tags: ["sample", "extract"]
+    #+column_types:
+    #  "Libell\xE9_d_acheminement": text
+  - name: l_appuisaeriens_materiau
+    description: liste de valeurs possibles pour le champ
+    config:
+      tags: ["list"]
+  - name: l_pointaccueil_nature
+    config:
+      tags: ["list"]
+  - name: l_appuisaeriens_materiau__osmgeodatamine
+    description: table de traduction / réconciliation de la liste de valeurs depuis la source (jeu / org) osmgeodatamine
+    config:
+      tags: ["link", "relationship"]

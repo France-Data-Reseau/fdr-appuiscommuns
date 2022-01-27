@@ -1,0 +1,41 @@
+
+name: 'fdr_appuiscommuns'
+version: '0.1'
+profile: 'fdr_appuiscommuns'
+config-version: 2
+
+model-paths: ["models"]
+analysis-paths: ["analyses"]
+test-paths: ["tests"]
+seed-paths: ["seeds"]
+macro-paths: ["macros"]
+
+target-path: "target"
+clean-targets:
+    - "target"
+    - "dbt_packages"
+    - "logs"
+
+on-run-start:
+    - '{{create_udfs()}}'
+    
+seeds:
+  fdr_appuiscommuns:
+    #+quote_columns: true now true by default in 1.0
+    #appuiscommuns_supportaerien__definition:
+
+#sources:
+#  appuiscommuns_osmgeodataminepowersupports:
+#    mysource:
+#      mytable:
+#        +enabled: false
+
+models:
+  #fdr_osmgeodatamine_powersupports:
+  fdr_appuiscommuns:
+      materialized: table
+      #staging:
+      source:
+        materialized: view
+      exploitation:
+        #materialized: view
