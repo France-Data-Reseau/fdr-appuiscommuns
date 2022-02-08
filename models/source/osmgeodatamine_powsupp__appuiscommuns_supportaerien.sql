@@ -24,7 +24,7 @@ with source as (
     Normally we would select from the table here, but we are using seeds to load
     our data in this project
     #}
-    select * from {{ ref('osmgeodatamine_powersupports_extract') }} -- TODO raw_
+    select * from {{ source_or_test_ref('appuiscommuns', 'osmgeodatamine_powersupports') }} -- TODO raw_
 
 ),
 
@@ -40,7 +40,7 @@ renamed as (
         "nature" as "{{ sourceFieldPrefix }}nature", -- pole, tower TODO dict conv
         "operator" as "{{ fieldPrefix }}Gestionnaire",
         "material" as "{{ sourceFieldPrefix }}material", -- TODO dict conv
-        "height" as "{{ fieldPrefix }}HauteurTotal", -- plutôt que HauteurAppui (?) TODO Hauteur ! hauteur ? __m ??
+        "height" as "{{ fieldPrefix }}HauteurAppui", -- flacombe : et non HauteurTotal ! TODO H/hauteur ? __m ??
         "reference" as "{{ fieldPrefix }}CodeExterne", -- ?? 101, 87, 37081ER073...
         "line_attachment" as "{{ sourceFieldPrefix }}line_attachment", -- ? suspension, pin, anchor...
         "line_management" as "{{ sourceFieldPrefix }}line_management", -- ? split, branch, cross...
@@ -62,12 +62,12 @@ parsed as (
         --"{{ fieldPrefix }}src_index",
         "{{ fieldPrefix }}src_id",
         uuid_generate_v5(uuid_generate_v5(uuid_ns_dns(), '{{ ns }}}}'), "{{ fieldPrefix }}src_id") as "{{ fieldPrefix }}Id",
-        ST_GeomFROMText('POINT(' || cast("X" as text) || ' ' || cast("Y" as text) || ')', 4326) as geometry, -- OU prefix ? forme ?? ou /et "Geom" ?
+        ST_GeomFROMText('POINT(' || cast("X" as text) || ' ' || cast("Y" as text) || ')', 4326) as geometry, -- OU prefix ? forme ?? ou /et "Geom" ? TODO LATER s'en servir pour réconcilier si < 5m
         "{{ sourceFieldPrefix }}utility", -- power
         "{{ sourceFieldPrefix }}nature", -- pole, tower TODO dict conv
         "{{ fieldPrefix }}Gestionnaire",
         "{{ sourceFieldPrefix }}material", -- TODO dict conv
-        "{{ fieldPrefix }}HauteurTotal", -- TODO Hauteur ! hauteur ? __m ??
+        "{{ fieldPrefix }}HauteurAppui", -- TODO Hauteur ! hauteur ? __m ??
         "{{ fieldPrefix }}CodeExterne", -- 101, 87, 37081ER073...
         "{{ sourceFieldPrefix }}line_attachment", -- suspension, pin, anchor, pulley, (pin)|(anchor), anchor|pin, suspension | anchor, anchor;pin, (suspension)|(suspension), yes...
         "{{ sourceFieldPrefix }}line_management", -- split, branch, cross...
@@ -94,7 +94,7 @@ reconciled as (
         "{{ sourceFieldPrefix }}nature", -- pole, tower TODO dict conv
         "{{ fieldPrefix }}Gestionnaire",
         {{ ref('l_appuisaeriens_materiau__osmgeodatamine') }}."Valeur" as "{{ fieldPrefix }}Materiau", -- TODO dict conv
-        "{{ fieldPrefix }}HauteurTotal", -- TODO Hauteur ! hauteur ? __m ??
+        "{{ fieldPrefix }}HauteurAppui", -- TODO Hauteur ! hauteur ? __m ??
         "{{ fieldPrefix }}CodeExterne", -- 101, 87, 37081ER073...
         "{{ sourceFieldPrefix }}line_attachment", -- suspension, pin, anchor...
         "{{ sourceFieldPrefix }}line_management", -- split, branch, cross...
@@ -106,7 +106,7 @@ reconciled as (
         "{{ fieldPrefix }}fdrcommune__nom" -- TODO OU OUI (et le fait que insee_id est déjà un id / unique permettra de savoir qu'il n'y a pas besoin de nom pour réconcillier)
 
     from parsed
-        join {{ ref('l_appuisaeriens_materiau__osmgeodatamine') }}
+        left join {{ ref('l_appuisaeriens_materiau__osmgeodatamine') }} -- LEFT join sinon seulement les lignes qui ont une valeur !! TODO indicateur count pour le vérifier
             on parsed.{{ sourceFieldPrefix }}material = {{ ref('l_appuisaeriens_materiau__osmgeodatamine') }}.{{ sourceFieldPrefix }}material
             
     
@@ -123,10 +123,10 @@ computed as (
         "{{ sourceFieldPrefix }}utility", -- power
         "{{ sourceFieldPrefix }}nature", -- pole, tower TODO dict conv
         'APPUI' as "{{ fieldPrefix }}TypePhysique", -- vu que toujours pole ou tower (ou CASE WHEN ?)
-        {{ ref('l_pointaccueil_nature') }}."{{ fieldPrefix }}Nature", -- 'POTEAU BOIS'
+        {{ ref('l_pointaccueil_nature__mapping') }}."{{ fieldPrefix }}Nature", -- 'POTEAU BOIS'
         "{{ fieldPrefix }}Gestionnaire",
         "{{ fieldPrefix }}Materiau", -- TODO dict conv
-        "{{ fieldPrefix }}HauteurTotal", -- TODO Hauteur ! hauteur ? __m ??
+        "{{ fieldPrefix }}HauteurAppui", -- TODO Hauteur ! hauteur ? __m ??
         "{{ fieldPrefix }}CodeExterne", -- 101, 87, 37081ER073...
         "{{ sourceFieldPrefix }}line_attachment", -- suspension, pin, anchor...
         "{{ sourceFieldPrefix }}line_management", -- split, branch, cross...
@@ -138,8 +138,8 @@ computed as (
         "{{ fieldPrefix }}fdrcommune__nom" -- TODO OU OUI (et le fait que insee_id est déjà un id / unique permettra de savoir qu'il n'y a pas besoin de nom pour réconcillier)
 
     from reconciled
-        join {{ ref('l_pointaccueil_nature') }}
-            on reconciled."{{ fieldPrefix }}Materiau" = {{ ref('l_pointaccueil_nature') }}."Valeur"
+        left join {{ ref('l_pointaccueil_nature__mapping') }} -- LEFT join sinon seulement les lignes qui ont une valeur !! TODO indicateur count pour le vérifier
+            on reconciled."{{ fieldPrefix }}Materiau" = {{ ref('l_pointaccueil_nature__mapping') }}."Valeur"
             
     
 )

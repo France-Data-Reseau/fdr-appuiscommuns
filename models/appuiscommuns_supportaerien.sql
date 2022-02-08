@@ -20,7 +20,7 @@ Union using dbt_utils helper :
 see https://github.com/dbt-labs/dbt-utils#union_relations-source
 #}
 {{ dbt_utils.union_relations(
-    relations=[ref('sample__appuiscommuns_extract_supportaerien')],
+    relations=[ref('osmgeodatamine_powsupp__appuiscommuns_supportaerien')],
     include=dbt_utils.star(ref('appuiscommuns_supportaerien__definition')),
     column_override={"geometry": "geometry"}
 ) }}
@@ -41,7 +41,7 @@ with source as (
         "{{ fieldPrefix }}Nature", -- 'POTEAU BOIS'
         "{{ fieldPrefix }}Gestionnaire",
         "{{ fieldPrefix }}Materiau", -- TODO dict conv
-        "{{ fieldPrefix }}HauteurTotal", -- TODO Hauteur ! hauteur ? __m ??
+        "{{ fieldPrefix }}HauteurAppui", -- TODO Hauteur ! hauteur ? __m ??
         "{{ fieldPrefix }}CodeExterne", -- 101, 87, 37081ER073...
         --"{{ sourceFieldPrefix }}line_attachment", -- suspension, pin, anchor... MAIS QUE CompositionAppui (plein), StructureAppui (moise)
         --"{{ sourceFieldPrefix }}line_management", -- split, branch, cross... MAIS QUE CompositionAppui (plein), StructureAppui (moise)

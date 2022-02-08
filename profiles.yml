@@ -1,5 +1,5 @@
 fdr_appuiscommuns:
-  target: prod
+  target: test
   outputs:
     dev:
       type: postgres
@@ -10,7 +10,18 @@ fdr_appuiscommuns:
       dbname: fdr
       schema: dbt_fdr
       threads: 4
-  outputs:
+    test:
+      type: postgres
+      host: 141.94.244.102
+      user: "youraltereouser"
+      password: "yourpassword"
+      port: 55432
+      # TODO : separate 1. "as in prod" test profile (staging ?), from 2. dbt's usual "each user in its own schema" profile (test ?) which requires permissions (create schema in database https://docs.getdbt.com/faqs/database-privileges ; simpler than more restricted & closer to prod https://mattmazur.com/2018/06/12/wrangling-dbt-database-permissions/ or with default privileges https://discourse.getdbt.com/t/the-exact-grant-statements-we-use-in-a-dbt-project/430 )
+      #dbname: datastore_test # TODO only test / sample data, same schemas ? or everyone in its own schema like dbt ? or own databae ??
+      #schema: dbt_yourname
+      dbname: datastore
+      schema: appuiscommuns
+      threads: 4
     staging:
       type: postgres
       host: 141.94.244.102
@@ -20,7 +31,6 @@ fdr_appuiscommuns:
       dbname: datastore_staging # TODO only test / sample data, same schemas ? or everyone in its own schema like dbt ? or own databae ??
       schema: appuiscommuns
       threads: 4
-  outputs:
     prod:
       type: postgres
       host: 141.94.244.102

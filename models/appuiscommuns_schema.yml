@@ -3,10 +3,10 @@ version: 2
 
 # tests génériques de contrainte de schéma pour le modèle de données du cas d'usage "appuis communs"
 models:
-  - name: sample__appuiscommuns_extract_supportaerien
-    description: la normalisation en supportaerien de la source ...extract...
+  - name: appuiscommuns_supportaerien
+    description: l'union des supportaerien des toutes les sources
     config:
-      tags: ['normalization'] # 'pii' TODO generate from source__type.sql (and rename it)
+      tags: ['unification'] # 'pii' TODO generate from source__type.sql (and rename it)
     columns:
       - name: appuiscommunssupp__src_name
         description: le nom de la source ("table lineage", DBT peut aussi le rajouter)
@@ -28,19 +28,29 @@ models:
         tests:
           - unique
           - not_null
-      - name: appuiscommunssupp__Materiau
+      - name: '"appuiscommunssupp__Materiau"'
         tags: ['l_appuisaeriens_materiau'] # TODO better naming allowing to generate relationships test and (?) (_)_enriched.sql model, generate from type_definition column name
         tests:
           - relationships:
-              to: ref('"l_appuisaeriens_materiau"')
+              to: ref("l_appuisaeriens_materiau")
               field: '"Valeur"'
       - name: appuiscommunssupp__fdrcommune__insee_id
         tags: ['fdrcommune__insee_id'] # TODO generate relationships test and (?) (_)_enriched.sql model, generate from type_definition column name
         tests:
           - not_null
           - relationships:
-              to: source('"france-data-reseau"', '"georef-france-commun.csv"')
+              to: source("france-data-reseau", "georef-france-commune.csv")
               field: '"com_code"'
+    tests:
+      - dbt_utils.equality:
+          compare_model: ref('osm_powersupports__appuiscommuns_supportaerien__expected') # TODO sur exemple démarqué, une fois --target fini
+  - name: osmgeodatamine_powsupp__appuiscommuns_supportaerien
+    description: la normalisation en supportaerien de la source ...extract...
+    config:
+      tags: ['normalization'] # 'pii' TODO generate from source__type.sql (and rename it)
+    tests:
+      - dbt_utils.equality:
+          compare_model: ref('osm_powersupports__appuiscommuns_supportaerien__expected') # TODO sur exemple démarqué, une fois --target fini
 
 seeds:
   - name: appuiscommuns_supportaerien__definition
@@ -53,8 +63,15 @@ seeds:
     description: extrait représentatif des données de la source (type) osmgeodatamine_powersupports
     config:
       tags: ["sample", "extract"]
-    #+column_types:
+      column_types:
+        com_insee: text # sinon integer et le code 01001 devient 1001
     #  "Libell\xE9_d_acheminement": text
+  - name : osm_powersupports__appuiscommuns_supportaerien__expected
+    description: attendu de la normalisation
+    config:
+      tags: ["unittest", "expected"]
+      column_types:
+        appuiscommunssupp__fdrcommune__insee_id: text # sinon integer et le code 01001 devient 1001
   - name: l_appuisaeriens_materiau
     description: liste de valeurs possibles pour le champ
     config:
@@ -62,6 +79,10 @@ seeds:
   - name: l_pointaccueil_nature
     config:
       tags: ["list"]
+  - name: l_pointaccueil_nature__mapping
+    description: table de traduction / réconciliation de la liste de valeurs depuis la source (jeu / org)
+    config:
+      tags: ["list", "relationship"]
   - name: l_appuisaeriens_materiau__osmgeodatamine
     description: table de traduction / réconciliation de la liste de valeurs depuis la source (jeu / org) osmgeodatamine
     config:

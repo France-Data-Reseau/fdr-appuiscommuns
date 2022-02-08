@@ -9,3 +9,4 @@ sources:
     tables:
       - name: "georef-france-region.csv"
       - name: "georef-france-commune.csv"
+      - name: "INSEE communes données démographiques"

@@ -1,0 +1,5 @@
+Valeur,Alias,Définition,appuiscommunssupp__Nature
+bois,,"Appuis bois, créosoté ou non beton ​ Appuis en béton armé acier Galva Appuis en acier galvanisé epoxy Composite Appuis dit ""composite"", résine époxy sur toile de fibre de verre",POTEAU BOIS
+beton,,Appuis en béton armé,POTEAU BETON 
+acier,Galva,Appuis en acier galvanisé,POTEAU METAL 
+epoxy,Composite,"Appuis dit ""composite"", résine époxy sur toile de fibre de verre",POTEAU COMPOSITE 
