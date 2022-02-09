@@ -30,8 +30,18 @@ information schema — this allows the model to be an ephemeral model
 {%- if not compare_columns -%}
     {%- do dbt_utils._is_ephemeral(model, 'test_equality') -%}
     {%- set compare_columns = adapter.get_columns_in_relation(model) | map(attribute='quoted') -%}
+    -- hhh {{ adapter.get_columns_in_relation(model) | map(attribute='data_type') | join(', ') }}
+    -- hhh {{ adapter.get_columns_in_relation(model) | selectattr("data_type", "USER_DEFINED", true)   }}
 {%- endif -%}
 
+
+{#-
+{% set compare_columns_adapted = [] %}
+{% for col_name in compare_columns %}
+    {% do compare_columns_adapted.append(col_name if col_name != '"geometry"' else col_name + '::text') %}
+{% endfor %}
+-#}
+-- hh
 {% set compare_cols_csv = compare_columns | join(', ') %}
 
 with a as (
