@@ -1,5 +1,5 @@
 X,Y,osm_id,utility,nature,operator,material,height,reference,line_attachment,line_management,transition,com_insee,com_nom
-0.6514814,47.4822627000576,node/1323154028,power,tower,,,,,,,,37206,Saint-Antoine-du-Rocher
+0.6514814,47.4822627000576,node/1323154028,power,tower,Coop. d'Electricit de Saint-Martin de Londres,,,,,,,37206,Saint-Antoine-du-Rocher
 0.6481917,47.4907889000557,node/5528573744,power,tower,RTE,,23,101,,,,37206,Saint-Antoine-du-Rocher
 0.6462229,47.4931968000552,node/1323154038,power,tower,,,,,,,,37206,Saint-Antoine-du-Rocher
 0.643322,47.4968056000544,node/1323154041,power,tower,,,,,,,,37206,Saint-Antoine-du-Rocher

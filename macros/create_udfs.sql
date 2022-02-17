@@ -22,6 +22,16 @@ exception
 end;
 $$ language plpgsql;
 
+create or replace function to_numeric_or_null (s text)
+  returns numeric
+as $$
+begin
+  return cast(s as numeric);
+exception
+  when others then return null;
+end;
+$$ language plpgsql;
+
 create or replace function to_decimal_or_null (s text)
   returns decimal
 as $$

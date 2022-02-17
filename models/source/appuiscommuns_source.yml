@@ -7,4 +7,4 @@ sources:
     #meta: {<dictionary>}
     #tags: [<string>]
     tables:
-      - name: "Supports aériens OpenStreetMap"
+      - name: "osmgeodatamine_powersupports" # "Supports aériens OpenStreetMap"
