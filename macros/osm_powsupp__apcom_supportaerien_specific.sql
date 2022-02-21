@@ -86,7 +86,7 @@ parsed as (
 
 ),
 
-reconciled as (
+translated as (
 
     select
         "{{ fieldPrefix }}src_name",
@@ -115,41 +115,8 @@ reconciled as (
             on parsed.{{ sourceFieldPrefix }}material = {{ ref('l_appuisaeriens_materiau__osmgeodatamine') }}.{{ sourceFieldPrefix }}material
             
     
-),
-
-computed as (
-
-    select
-        "{{ fieldPrefix }}src_name",
-        --"{{ fieldPrefix }}src_index",
-        "{{ fieldPrefix }}src_id",
-        "{{ fieldPrefix }}Id",
-        geometry, -- OU prefix ? forme ??  ou /et "Geom" ?
-        "{{ sourceFieldPrefix }}utility", -- power
-        "{{ sourceFieldPrefix }}nature", -- pole, tower TODO dict conv
-        'APPUI' as "{{ fieldPrefix }}TypePhysique", -- vu que toujours pole ou tower (ou CASE WHEN ?)
-        {{ ref('l_pointaccueil_nature__mapping') }}."{{ fieldPrefix }}Nature", -- 'POTEAU BOIS'
-        "{{ fieldPrefix }}Gestionnaire",
-        "{{ fieldPrefix }}Materiau", -- TODO dict conv
-        "{{ fieldPrefix }}HauteurAppui", -- TODO Hauteur ! hauteur ? __m ??
-        "{{ fieldPrefix }}HauteurAppui__s",
-        "{{ fieldPrefix }}CodeExterne", -- 101, 87, 37081ER073...
-        "{{ sourceFieldPrefix }}line_attachment", -- suspension, pin, anchor...
-        "{{ sourceFieldPrefix }}line_management", -- split, branch, cross...
-        "{{ sourceFieldPrefix }}transition", -- yes
-        "{{ fieldPrefix }}commune_insee_id", -- sert à enriched qui est indépendant de la source, donc sourceFieldPrefix ne suffirait pas ; alternative plus précise
-        "fdrcommune__insee_id", -- alternative plus facile à réconcilier
-        "{{ fieldPrefix }}fdrcommune__insee_id", -- TODO OU les deux OUI (comme un chemin)
-        "{{ fieldPrefix }}commune_nom", -- enrichissement mminimal pour rendre code insee lisible ?
-        "{{ fieldPrefix }}fdrcommune__nom" -- TODO OU OUI (et le fait que insee_id est déjà un id / unique permettra de savoir qu'il n'y a pas besoin de nom pour réconcillier)
-
-    from reconciled
-        left join {{ ref('l_pointaccueil_nature__mapping') }} -- LEFT join sinon seulement les lignes qui ont une valeur !! TODO indicateur count pour le vérifier
-            on reconciled."{{ fieldPrefix }}Materiau" = {{ ref('l_pointaccueil_nature__mapping') }}."Valeur"
-            
-    
 )
 
-select * from computed
+select * from translated
 
 {% endmacro %}
