@@ -1,8 +1,11 @@
 {#
-Normalisation vers le modèle de données du cas d'usage "eau potable" des données de type canalisation de la source d'exemple embarquée "echantillon 3"
+Normalisation vers le modèle de données du cas d'usage "appuiscommuns" des données de type canalisation de la source "osmgeodatamine_powersupports"
+Partie spécifique à la source
 
 - OU à chaque fois pour plus de concision et lisibilité select * (les champs en trop sont alors enlevés à la fin par la __definition) ?
 #}
+
+{% macro osm_powsupp__apcom_supportaerien_specific(source_relation) %}
 
 {% set containerUrl = 'http://' + 'datalake.francedatareseau.fr' %}
 {% set typeUrlPrefix = containerUrl + '/dc/type/' %}
@@ -24,7 +27,7 @@ with source as (
     Normally we would select from the table here, but we are using seeds to load
     our data in this project
     #}
-    select * from {{ source_or_test_ref('appuiscommuns', 'osmgeodatamine_powersupports') }} -- TODO raw_
+    select * from {{ source_relation }} -- TODO raw_
 
 ),
 
@@ -148,3 +151,5 @@ computed as (
 )
 
 select * from computed
+
+{% endmacro %}

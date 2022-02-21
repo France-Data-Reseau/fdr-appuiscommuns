@@ -23,7 +23,7 @@ see https://github.com/dbt-labs/dbt-utils#union_relations-source
 #}
 {{ dbt_utils.union_relations(relations=[
       ref('appuiscommuns_supportaerien__definition'),
-      ref('osmgeodatamine_powsupp__appuiscommuns_supportaerien')],
+      ref('osm_powsupp__appuiscommuns_supportaerien')],
     include=dbt_utils.star(ref('appuiscommuns_supportaerien__definition')),
     column_override={"geometry": "geometry"}
 ) }}
