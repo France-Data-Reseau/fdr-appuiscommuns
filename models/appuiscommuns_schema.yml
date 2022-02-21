@@ -40,6 +40,13 @@ models:
         tests:
           - unique
           - not_null
+      - name: '"appuiscommunssupp__CodeExterne"'
+        #description:
+        tests:
+          - dbt_expectations.expect_column_values_to_be_of_type:
+              column_type: text # TODO Alphanumérique trop contraint (-) ?
+          - dbt_expectations.expect_column_values_to_match_regex:
+              regex: "^[a-zA-Z0-9]*$" # if also unicode : "^[\\p{L}0-9]*$";
       - name: '"appuiscommunssupp__Materiau"'
         tags: ['l_appuisaeriens_materiau'] # TODO better naming allowing to generate relationships test and (?) (_)_enriched.sql model, generate from type_definition column name
         tests:
@@ -81,13 +88,22 @@ models:
     #      compare_model: ref('osm_powersupports__supportaerien__expected_stg') # TODO sur exemple démarqué, une fois --target fini ; PAS directement __expected pour gérer le parsing nécessaire (uuid... ; le même code sert à charger les exemples embarqués ex. __definition, donc mieux qu'en sens inverse) ; MAIS pb
 
 seeds:
-  - name: appuiscommuns_supportaerien__definition
-    description: définition formelle du type supportaerien (pour l'instant copié manuellement depuis le Gitbook, à terme pourrait générer ce dernier voire un métamodèle guidant l'outillage)
+  #- name: appuiscommuns_supportaerien__definition
+  #  description: définition formelle du type supportaerien (pour l'instant copié manuellement depuis le Gitbook, à terme pourrait générer ce dernier voire un métamodèle guidant l'outillage)
+  #  config:
+  #    tags: ["definition"]
+  #    meta: { "type" : "supportaerien" }
+  - name: appuiscommuns_supportaerien__example
+    description: "Parsing of a priori (made-up), covering examples of the definition / interface.
+      Examples have to be **as representative** of all possible data as possible because they are also the basis of the definition.
+      For instance, for a commune INSEE id field, they should also include a non-integer value such as 2A035 (Belvédère-Campomoro).
+      Methodology :
+      1. copy the first line(s) from the specification document (pour l'instant copié manuellement depuis le Gitbook, à terme pourrait générer ce dernier voire un métamodèle guidant l'outillage)
+      2. add line(s) to contain further values for until they are covering for all columns
+      3. NB. examples specific to each source type are provided in _source_example along their implementation (for which they are covering)"
     config:
-      tags: ["definition"]
+      tags: ["example"] # echantillon, test
       meta: { "type" : "supportaerien" }
-  #- name: echantillon:
-  #  tags: ["test"]
   - name : osmgeodatamine_powersupports_extract
     description: extrait représentatif des données de la source (type) osmgeodatamine_powersupports
     config:
@@ -100,6 +116,8 @@ seeds:
     config:
       tags: ["unittest", "expected"]
       column_types:
+        appuiscommunssupp__commune__insee_id: text # sinon integer et le code 01001 devient 1001
+        fdrcommune__insee_id: text # sinon integer et le code 01001 devient 1001
         appuiscommunssupp__fdrcommune__insee_id: text # sinon integer et le code 01001 devient 1001
   - name: l_appuisaeriens_materiau
     description: liste de valeurs possibles pour le champ

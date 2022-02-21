@@ -1,0 +1,3 @@
+appuiscommunssupp__src_name,appuiscommunssupp__src_id,appuiscommunssupp__Id,geometry,appuiscommunssupp__TypePhysique,appuiscommunssupp__Nature,appuiscommunssupp__Gestionnaire,appuiscommunssupp__Materiau,appuiscommunssupp__HauteurAppui,appuiscommunssupp__CodeExterne,appuiscommunssupp__fdrcommune__insee_id,appuiscommunssupp__fdrcommune__nom,appuiscommunssupp__ClassePrecision
+osmgeodatamine_powersupports_extract,node/8736382817,9e90dfdd-f3b2-5c84-a378-3a0fa12d9de1,POINT (0.363591 47.4475859000654),APPUI,POTEAU BETON,Enedis,concrete,23,37081ER073,37081,Cléré-les-Pins,A
+uncleaned_source,82817,,POINT (0.373591 47.4575859000654),APPUI,POTEAU BETON,Coop. d'Electricit de Saint-Martin de Londres,concrete,23,234,2A035,Belvédère-Campomoro,A

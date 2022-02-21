@@ -12,15 +12,18 @@ Unification des données normalisées de toutes les sources de type appuiscommun
 {% set idUrlPrefix = typeUrlPrefix + type + '/' %}
 
 {#
-Normally we would not use samples
-
 Union using dbt_utils helper :
-- include=dbt_utils.star(...) allows get exactly the fields of an official type definition (ex. provided bby a CSV seed sample)
+- _definition (with 0 data lines) as the first unioned relation adds even fields missing in all normalizations, with the right type,
+if they are provided in the official type definition
+- include=dbt_utils.star(_definition) excludes source-specific fields
 - column_override={"geometry": "geometry"} is required else syntax error : cast("geometry" as USER-DEFINED) as "geo...
 see https://github.com/dbt-labs/dbt-utils#union_relations-source
+- source_column_name="_dbt_source_relation"
+- 
 #}
-{{ dbt_utils.union_relations(
-    relations=[ref('osmgeodatamine_powsupp__appuiscommuns_supportaerien')],
+{{ dbt_utils.union_relations(relations=[
+      ref('appuiscommuns_supportaerien__definition'),
+      ref('osmgeodatamine_powsupp__appuiscommuns_supportaerien')],
     include=dbt_utils.star(ref('appuiscommuns_supportaerien__definition')),
     column_override={"geometry": "geometry"}
 ) }}
