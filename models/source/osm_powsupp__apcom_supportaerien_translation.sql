@@ -4,4 +4,10 @@ Partie spécifique à la source
 TODO view
 #}
 
+{{
+  config(
+    materialized="table"
+  )
+}}
+
 {{ osm_powsupp__apcom_supportaerien_specific(source_or_test_ref('appuiscommuns', 'osmgeodatamine_powersupports')) }}
