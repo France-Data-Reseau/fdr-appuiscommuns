@@ -28,7 +28,7 @@
 with nodes as (
 
   select * from (values
-  {% for node in graph.nodes.values() %}
+  {% for node in graph.nodes.values() | selectattr("schema", "equalto", this.schema) %}
     (
     '{{ node.name }}', '{{ use_case }}',
     {% for tag in tags %}

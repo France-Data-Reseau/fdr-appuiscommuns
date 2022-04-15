@@ -20,7 +20,12 @@ Partie générique
 {% set idUrlPrefix = typeUrlPrefix + type + '/' %}
 
 with link_geometry_fdrcommune as (
-    {{ apcom_supportaerien_translation__link_geometry_fdrcommune(translated_source_model_name) }}
+    {%- set fields = adapter.get_columns_in_relation(ref(translated_source_model_name)) | map(attribute="name") | list -%}-- BEWARE without | list it stays a generator that can only be iterated once
+    {#% set cols = dbt_utils.star(ref(translated_source_model_name), except=[
+          fieldPrefix + "fdrcommune__insee_id",
+          fieldPrefix + "commune__insee_id",
+          "fdrcommune__insee_id"]).split(', ') %#}
+    {{ apcom_supportaerien_translation__link_geometry_fdrcommune(ref(translated_source_model_name), id_field=fieldPrefix+"Id", fields=fields) }}
 
 
 {# NO RATHER dropping given commune ids and getting them from geometry

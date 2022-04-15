@@ -2,11 +2,21 @@
 
 Ce projet dbt (Data Build Tool) est théoriquement consacré au cas d'usage Appuis Communs, dans le cadre de l'initiative France Data Réseau. Toutefois, il contient pour l'instant aussi la transformation des données de la source publique OSM Geodatamine power supports (de type URL CSV) indiquée par le partenaire expert et "data steward" Datactivist vers le modèle normalisé de ce cas d'usage, au lieu d'être dans un projet dbt dédié tel fdr_appuiscommuns_osm(powersupports).
 
-TODOs : vars, macroter pour sources ; birdz, refactoring... en fond : incremental (if incremental where updated >), snapshot (SCD2 : rajoute colonnes dbt_valid_from  dbt_valid_to MAIS pas trop en Open Data ; sinon publier par vue liant vers concretS, qui / selon indicateurs voire alertes, lançables depuis Jenkins ?)
+TODOs : descendre, union+ MAIS ET dedup12 (INDEX GEO REQUIS ET INCREMENTAL), réconciliation (nécessairement après normalization ; comme test relationship serait utile de mutualiser entre sources impls donc après union, MAIS si des champs source specific y aident il faut le faire avant en source specific, en étage précablé i.e macro séparée(s pour pouvoir ne remplacer que l'une ?!) ?), emental+, --target final, IRVE, OK _ot(w) ; vars, macroter pour sources ; birdz, refactoring... en fond : incremental (if incremental where updated >), snapshot (SCD2 : rajoute colonnes dbt_valid_from  dbt_valid_to MAIS pas trop en Open Data ; sinon publier par vue liant vers concretS, qui / selon indicateurs voire alertes, lançables depuis Jenkins ?)
 
-TODO montrer :
-- principes incremental, snapshots
-- TODO Q IRVE
+TODO bouger :
+idée : faciliter avec une partie des données (var en LIMIT)
+https://github.com/dbt-labs/dbt-core/issues/401 https://github.com/dbt-labs/dbt-core/issues/1059
+open data "pourri"
+historiser le résultat (mais pas l'intéremédiaire), voire dans table unique en rajoutant la date ex. j ou semaine, ex. en post-hook
+IRVE :
+manque "pourquoi besoin de" ou "architecture fonctionnelle" qui fait le lien entre CU et architecture / notice technique (ex. exploratoire géo expert requiert WFS)
+
+ - IRVE / "bornes de recharge" :
+  - c'est bien beau de réutiliser des schémas existants, mais manque comment on les relie (ou pas) entre eux PAS, et les unités et valeurs sont-elles cohérentes ? => 
+  - etalab irve : code_insee_commune CORRECT ? siren_amenageur donc rajouter dataset organisations NON ? de quoi, parcelles personnes morales contenant siren et nom, ou sirene etalab https://www.data.gouv.fr/fr/datasets/base-sirene-des-entreprises-et-de-leurs-etablissements-siren-siret/ ? puissance_nominale en kW alors que dans modèle en kVA mais la comparaison sera faite en dehors de la plateforme pour commencer
+  - parcelles foncières : comment et à quoi les réconcilier NON SIMPLE COUCHE SUPPLEMENTAIRE ?? irve vers parcelle selon geo ? quel usage ?? SI AVEC PARKING PAR GEO POLYGONE POUR SAVOIR SI ZONE PRIVEE OU PUBLIC mais pas pour la borne EXISTANTE, installent des nouvelles plutôt là où il
+  - parking : insee = commune ou code PAS RECONCILIER QUE GROUP BY OU PAR GEO ? num_siret : re donc rajouter dataset organisations NON PAS LIER ?
 
 
 ## WHATSNEW
@@ -24,6 +34,15 @@ TODO montrer :
 - diverses veilles : --store-failures, dbt docs
 
 
+## Retours sur les sources de données
+
+20220222 OSM Geodatamine :
+- modèle - manque la date de modification (requis pour incrémental et résoudre les doublons) : timestamp du node https://www.openstreetmap.org/api/0.6/changeset/49428808 ou created_by du changeset (groupe de modifications) https://www.openstreetmap.org/api/0.6/changeset/49428808
+- modèle - types non respectés : TODO alphanum...
+- CSV OK
+- TODO copier doublons
+
+
 ## Ce que fait ce projet dbt :
 
 - côté source :
@@ -33,10 +52,11 @@ TODO montrer :
  - renommage :
    - la sémantique est celle du standard supérieur : http://cnig.gouv.fr/?page_id=17477 . Nommage, mais aussi dictionnaires de valeurs qui manquent 
  - Lecture : intégré 1 170 002 lignes 100 mo en 30 min en 4000+ chunks par CKAN (vs 12-15 min de traitements dbt)
+   - métamodèle : la hauteur joue le rôle de slot de l'équipement, 4 types : support <- équipment <- occupation et les 2 par SuiviOccupation
  - parsing :
    - géo de X Y WSG84 par PostGIS (AVEC srid 4326)
    - Q code INSEE commune : text sinon 01001 devient 1001 (conf dbt seed ou CKAN Datastore data dictionary)
-   - NB. méthodo : sinon integer par dbt seed, ceux à parser depuis string suffixés par __s ou format (nombre, date), profiledbt_source_ pour voir pbs nettoyage (TODO rajouter compte)
+   - NB. méthodo : sinon integer par dbt seed, ceux à parser depuis string suffixés par __s ou format (nombre, date), profilage de source dans profiledbt_source_ pour voir pbs nettoyage (TODO rajouter au pourcentage le compte voire les plus / moins fréquents)
  - nettoyage :
    - (a priori) pas car venant d'OSM ; sinon (détecter par échec de traitement,) traiter par règles SQL sur WHERE (ou bien avant par Excel ou Open Refine), après utiliser profilage pour confirmer la différence entre pas parsé et parsé et TODO tableau de bord de ça ; 
    - Q hauteur : pas nettoyé (contient "emental" (?), mais float et "" semblent passer), vu par AVG KO et dans profiledbt_source_ vs __s(ATTENTION le mapping n'est pas parfaitement 1 pour 1 ex. TypePhysique). Le profilage permet de le voir : Hauteur a 125 distincts mais Hauteur__s 127
@@ -77,7 +97,7 @@ appco."appuiscommunssupp__fdrcommune__insee_id", count( appco."appuiscommunssupp
 left join "datastore"."france-data-reseau"."georef-france-commune.csv" odscom on appco."appuiscommunssupp__fdrcommune__insee_id" = odscom."com_code"
     where odscom."com_code" is null group by appco."appuiscommunssupp__fdrcommune__insee_id"
   - exploitation :
-    - exemple de calcul d'indicateurs basiques : par commune et région par GROUP BY : count et par habitant, min / max / avg des nombres, valeurs distinctes des dictionnaires (par array_agg distinct) et compte pour chacun (par macro dbt pivot, patchée), TODO : aussi leur pourcentage (en adaptant la macro dbt), over time et des nouvelles lignes, TODO LATER test même nombre de lignes que source minus doublons
+    - exemple de calcul d'indicateurs basiques : par commune et région par GROUP BY : count et par habitant, min / max / avg des nombres, valeurs distinctes des dictionnaires (par array_agg distinct) et compte pour chacun (par macro dbt pivot, patchée) ; TODO : aussi leur pourcentage (en adaptant la macro dbt), version over time (ot, à l'aide d'incremental) et que des nouvelles lignes / par périodes ex. semaine / mois, TODO LATER test même nombre de lignes que source minus doublons
   - TODO Q filtrer sur périmètre quand ? à télécharger quoi ? découpés comment (quand par commune ex. _normalized ou pas ex. _indicators ou autre) et dans quelle org (si pas logique) ?
     - => flacombe : quoi et où publier et comment découpé et filtrer sur périmètre (et impact structure projet / étapes, et car matérialisation) => TODO la vue par périmètre géographique (territoire) mais pas la vue ; par défaut dans l'organisation qui la produit donc ici cas d'usage (mais recopie dans org source envisageable après)
    
@@ -89,10 +109,10 @@ left join "datastore"."france-data-reseau"."georef-france-commune.csv" odscom on
   - métamodèle :
     - sous forme de (doc et) tags (voire meta : type, pii...) dans _schema.yml (normalization, id / unique / uuid, sample / extract) et seeds CSV (type_definition, list, link ou relationship), et de "meta" (type, def? in(s), source?), et comment les générer et les exploiter (dbt docs generate puis serve et les entrer dans le champ de Recherche en cochant "Tags", ou target/catalog.json puis output textuel .md ou alimenter une IHM ex. React.js permettant de naviguer par tag voire schema / org(dataset) et type)
     - meta_indicators (v0) : tableau de bord d'avancement, d'adoption des étapes du traitement et des fonctionnalités du moteur. (models SQL) par type et étape, depuis tag yaml et regex sur nom, group by, par SQL (plutôt que python ou js) ; TODO : et par source, nb champs et liens, par def et leurs sources, transformation = normalization (1 in) ou enrichissement (plusieurs in mais 1 principal) ou x ; et impact nommage dbt models SQL
-  - NB. veille doc dbt-style - au-delà limité : (column tags pas visibles dans dbt doc UI) description dans les .yml (model, column, sources), externalisables dans {% docs table_events %}{% enddocs %} dans .md et notamment __overview__, MAIS PAS dans .sql ni tests https://docs.getdbt.com/reference/dbt-jinja-functions/doc . Roadmap :
+  - NB. veille doc dbt-style - au-delà limité : (hélas column tags pas visibles dans dbt doc UI) description dans les .yml (model, column, sources), externalisables dans {% docs table_events %}{% enddocs %} dans .md et notamment __overview__ (et utilisable pour publier ex. profilage), MAIS PAS dans .sql ni tests https://docs.getdbt.com/reference/dbt-jinja-functions/doc . Roadmap :
     - doc within .sql https://github.com/dbt-labs/dbt-core/issues/979
     - doc inheritance = same, renamed, transformed https://github.com/dbt-labs/dbt-core/issues/2995
- - TODO indicateurs de complétude et qualité, générique et métier. A l'aide de tout le précédent : profilage de source dont indicateurs de nettoyage voire de caractéristiques, tests génériques de caractéristiques et de non régression de transformation, indicateurs métier spécifiques ; et de tous évolution avec _over_time, envoyés comme ressources dans CKAN. TODO LATER alertes voire bloquage de processus ex. notion de "run" (avec guid comme --store-failures ?) publiable ou non (ex. par view SQL) relançable (dans Jenkins collaboratif ?)
+ - TODO indicateurs de complétude et qualité, générique et métier. A l'aide de tout le précédent : profilage de source dont indicateurs de nettoyage voire de caractéristiques, tests génériques de caractéristiques et de non régression de transformation, indicateurs métier spécifiques ; et de tous évolution avec _over_time, envoyés comme ressources dans CKAN OU / ET publiés en tableau .md dans docs (comme dbt-profiler). TODO LATER alertes voire bloquage de processus ex. notion de "run" (avec guid comme --store-failures ?) publiable ou non (ex. par view SQL) relançable (dans Jenkins collaboratif ?)
    - TODO et au-delà, comment s'en servir pour suivre évolutions des données à correctement transformer et des indicateurs, et pour moissonnage / au fil de l'eau ?
 
 
@@ -103,11 +123,6 @@ left join "datastore"."france-data-reseau"."georef-france-commune.csv" odscom on
   - TODO birdz : appuisaeriens, pas standard ; PDR_NUM source id ; plus type  VARCHAR 254 ; commençant par code INSEE commune OUI sinon quel est l'identifiant commune A TROUVER DEPUIS X Y DANS TOUS LES CAS !! DISTANCE < 20m ; pas de code_externe
   - TODO megalis : appuisaeriens, en GraceTHD v2 (pas v3 déjà envoyée) ; mais dans l'exemple aucun id / code ne référence celui dans birdz OUI 2 ENTREPRISES DIFFERENTES (gestionnaires de ce qui est supporté par l'appui et modélise des choses qu'il ne possède pas) il y a beaucoup de champs et surtout de codes, qui mériteraient un détail / doc et du mapping : pt_code est id source, pt_codeext référence métier / externe (reference OSM) du métier du gestionnaire du poteau = CodeExterne ;  id / code ORMB = propriétaire ex syndicat ; propriétés pt_ point technique GraceTHC vs nd_ noeud GraceTHD niveaux d'héritage GraceTHD dont on hérite
   - flacombe : doublons possibles entre toutes les sources
- - IRVE / "bornes de recharge" :
-  - c'est bien beau de réutiliser des schémas existants, mais manque comment on les relie (ou pas), et les unités et valeurs sont-elles cohérentes ?
-  - etalab irve : code_insee_commune ? siren_amenageur donc rajouter dataset organisations ? de quoi, parcelles personnes morales contenant siren et nom, ou sirene etalab https://www.data.gouv.fr/fr/datasets/base-sirene-des-entreprises-et-de-leurs-etablissements-siren-siret/ ?
-  - parcelles foncières : comment et à quoi les réconcilier ?? irve vers parcelle selon position ? quel usage ??
-  - parking : insee = commune ou code ? num_siret : re donc rajouter dataset organisations ?
 
 - TODO métamodèle : joli print auto .md de tout ce qu'il y a / sources et chaque étape (donc ont dossiers dédiés ?! pour chacune, puis pour les exploitations plus ou moins génériques ou spécifiques, et __definition.csv plus dicts.csv, voire déduire de profilage les types, formats et caracs ex. id) et plus à fond si formalisé, le mettre dans le README. A partir de : target/catalog.json dont les tags, macro on-run-end get_relations_by_pattern() ou jinja graph selectattr (voir union) ?
  - et / ou essayer de générer le métamodèle yaml ! partiellement au moins, depuis ça
@@ -146,14 +161,22 @@ left join "datastore"."france-data-reseau"."georef-france-commune.csv" odscom on
 - enrichissement ex. depuis communes ODS, devant être visibilisée par une view SQL
 - unification : dbt_utils.union_relations(), auto de toutes les relations ex. dans schemas des organisations CKAN dont un cas d'usage dépend hors tests ou selon un métamodèle
 
-- TODO (et nommage aussi selon) quoi matérialiser : selon les besoins de performances (à tester !) : pour téléchargement & prévisualisation, donc des relations visibillisées dans CKAN :
- - logiquement sans doute pas normalization,
- - au moins (OU ???) unified (ex. osm_powersupport 14-65s)
- - et surtout indicators (ex. ) (qui pas performants en vue !?! et pas gros)
- - mais _enriched reste a priori un helper (de jointure, qu'on pourrait optimiser => TODO index FK) pour d'autre exploitations et trop lourd (beaucoup de colonnes), SAUF si c'est un vrai enrichissement ex. traitements / calculs métier lourds / externes comme DSL, qui prennent du temps et dont les résultats sont donc toujours mis sur la base datalake en asynchrône, et dans une table séparée i.e. dbt source pour que dbt ne risque pas de la détruire (TODO mais faire de l'incrémental / _over_time !!) et qu'il faut joindre après => TODO différencier ! _join != _union_computed (qui avant _join ou si en a besoin après ?!?)
- - une bonne raison de les envoyer en CSV à CKAN car ainsi il a le CSV donné à téléchargé ET les données en dur pour les recherches etc. du Datastore ?!
+- quoi matérialiser (et nommage aussi selon) : selon les besoins et les transformations à optimiser
+ - selon les besoins : pour téléchargement & prévisualisation, donc des relations visibillisées dans CKAN :
+  - logiquement sans doute pas normalization (les transformations ligne à ligne peuvent rester une vue), sauf si besoin d'index
+  - au moins (OU ???) unified (ex. osm_powersupport 14-65s)
+  - et surtout indicators (ex. ) (qui pas performants en vue !?! et pas gros)
+  - mais _enriched reste a priori un helper (de jointure, qu'on pourrait optimiser => TODO index FK) pour d'autre exploitations et trop lourd (beaucoup de colonnes), SAUF si c'est un vrai enrichissement ex. traitements / calculs métier lourds / externes comme DSL, qui prennent du temps et dont les résultats sont donc toujours mis sur la base datalake en asynchrône, et dans une table séparée i.e. dbt source pour que dbt ne risque pas de la détruire (TODO mais faire de l'incrémental / _over_time !!) et qu'il faut joindre après => TODO différencier ! _join != _union_computed (qui avant _join ou si en a besoin après ?!?)
+  - & une bonne raison de les envoyer en CSV à CKAN car ainsi il a le CSV donné à téléchargé ET les données en dur pour les recherches etc. du Datastore ?!
+ - pour la performances des transformations - méthodologie :
+  - définir tous les models dbt en table, en inliné dans le model : {{ config(materialized="table"
+  - exécuter (dbt run) ; si trop lent :
+   - copier le compilé (sans lignes vides : ) dans dbeaver après EXPLAIN,
+   - et rajouter les index manquants dans la précédente config inlinée (voire rajouter les index a priori : ceux sur lesquels sont faits jointures, group by...), par exemple : . Voir https://docs.getdbt.com/reference/resource-configs/postgres-configs
+  - de nouveau exécuter, et tant que c'est toujours trop lent, EXPLAIN et rajouter index
+  - enfin, repasser les matérlisations table non indispensables en view
  - pour obtenir enrichissement (ex. 571-647s) ou indicateurs plus rapidement : SEULEMENT si beaucoup de différents
- - LATER index pour / si perfs ? https://docs.getdbt.com/reference/resource-configs/postgres-configs
+ - LATER index pour / si perfs ? 
  
 - doc :
  - screenshots
@@ -168,6 +191,28 @@ left join "datastore"."france-data-reseau"."georef-france-commune.csv" odscom on
     - Suivant : si besoin changer le nom du fichier, Suivant : commencer
 - ouvrir les projets github, après élimination / démarquage de toutes données réelles
 - datalake : tableau des logins/pass, organisation et IP ; automatisations
+
+### FAQ :
+
+* column "appuiscommunssupp__Gestionnaire__None" does not exist
+14:24:34    HINT:  There is a column named "appuiscommunssupp__Gestionnaire__None" in table "appuiscommuns__supportaerien_indicators_region_ot", but it cannot be referenced from this part of the query.
+14:24:34    compiled SQL at target/run/fdr_appuiscommuns/models/exploitation/appuiscommuns__supportaerien_indicators_region_ot.sql
+=> la structure du flux incrémental a changé par rapport à ce qu'il avait précédemment entré dans sa table historisée _ot, supprimer cette dernière (ou la migrer si on souhaite en garder les anciennes données)
+
+Gotchas - DBT :
+- See test failures : store them in the database : dbt test --store-failures https://docs.getdbt.com/docs/building-a-dbt-project/tests https://github.com/dbt-labs/dbt-core/issues/2593 https://github.com/dbt-labs/dbt-core/issues/903
+- index : https://docs.getdbt.com/reference/resource-configs/postgres-configs
+- introspect compiled model : https://docs.getdbt.com/reference/dbt-jinja-functions/graph
+- embed yaml conf in .sql : https://docs.getdbt.com/reference/dbt-jinja-functions/fromyaml
+- dbt reuse : macros, packages (get executed first like they would be on their own including .sql files, but can pass different variables through root dbt_project.yml (?) ; TODO Q subpackages ?) https://www.fivetran.com/blog/how-to-re-use-dbt-guiding-rapid-mds-deployments
+
+Gotchas - Jinja2 :
+- doc https://jinja.palletsprojects.com/en/3.0.x/templates
+- map() filter returns string "<generator object do_map at 0x10bd730>" => add |list https://github.com/pallets/jinja/issues/288
+
+Gotchas - DBeaver :
+- big query (with WITH statement...) throws error : DBeaver uses ";" character AND empty lines as statements separator, so remove these first https://dbeaver.io/forum/viewtopic.php?f=2&t=1687
+
 
 
 ## Install, build & run
@@ -237,6 +282,9 @@ dbt docs serve # (--port 8001) sert la doc générée sur http://localhost:8000
 # au-delà :
 dbt run --target staging --select meta_indicators_by_type # un seul model SQL
 dbt run test --store-failures # les lignes en erreurs des tests sont stockés (dans un schema _dbt_test__audit TODO mieux)
+
+# debug :
+vi logs/dbt.log
 
 ```
 

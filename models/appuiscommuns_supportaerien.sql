@@ -20,13 +20,53 @@ if they are provided in the official type definition
 see https://github.com/dbt-labs/dbt-utils#union_relations-source
 - source_column_name="_dbt_source_relation"
 - 
+
+is a table only if has reconciliation
+    include=dbt_utils.star(ref('appuiscommuns_supportaerien__definition')),
 #}
+
+{{
+  config(
+    materialized="table"
+  )
+}}
+
+
+with all1 as (
+
 {{ dbt_utils.union_relations(relations=[
       ref('appuiscommuns_supportaerien__definition'),
       ref('osm_powsupp__appuiscommuns_supportaerien')],
-    include=dbt_utils.star(ref('appuiscommuns_supportaerien__definition')),
-    column_override={"geometry": "geometry"}
-) }}
+    column_override={"geometry": "geometry"})
+}}
+
+{#
+14s without commune_linked
+), geometry_deduped as (
+    -- geometry deduplication :
+    -- deduplication could 
+    -- FOR MORE PERFORMANCE, REQUIRES PRIMARY KEY ON ID AND A TABLE SO NOT ON SOURCE
+    -- OK : 44s rather than 0,44 if on 1m lines rather than the 200 lines, even on translation view (or source view)
+    {{ dedupe('all1', id_fields=['"geometry"']) }}
+    
+#}
+{# TODO rather n-n relaationship
+NB. way too long without table materialization and indexing
+#}
+), commune_linked as (
+    -- reconciliation :
+    -- NB. reconciliation to communes requires a geometry field, so can't be done on the source (and is more efficient being in a table)
+    -- moreover, commune is not necessary for other translation handlings (dedup...). And doing it after translation allows to do it all in one go.
+    {%- set fields = adapter.get_columns_in_relation(ref('appuiscommuns_supportaerien__definition')) | map(attribute="name") | list -%}-- BEWARE without | list it stays a generator that can only be iterated once
+    {#% set cols = dbt_utils.star(sourceModel, except=[
+          fieldPrefix + "fdrcommune__insee_id",
+          fieldPrefix + "commune__insee_id",
+          "fdrcommune__insee_id"]).split(',') %#}
+    {{ apcom_supportaerien_translation__link_geometry_fdrcommune("all1", id_field="appuiscommunssupp__Id", fields=fields) }}
+)
+
+select * from commune_linked
+
 
 {#
 Alternative : explicit SELECT * or all fields explicitly UNION...
