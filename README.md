@@ -199,6 +199,9 @@ left join "datastore"."france-data-reseau"."georef-france-commune.csv" odscom on
 14:24:34    compiled SQL at target/run/fdr_appuiscommuns/models/exploitation/appuiscommuns__supportaerien_indicators_region_ot.sql
 => la structure du flux incrémental a changé par rapport à ce qu'il avait précédemment entré dans sa table historisée _ot, supprimer cette dernière (ou la migrer si on souhaite en garder les anciennes données)
 
+* Unable to do partial parsing because a project config has changed
+=> rm target/partial_parse.msgpack https://stackoverflow.com/questions/68439855/in-dbt-when-i-add-a-well-formatted-yml-file-to-my-project-i-stop-being-able-t
+
 Gotchas - DBT :
 - See test failures : store them in the database : dbt test --store-failures https://docs.getdbt.com/docs/building-a-dbt-project/tests https://github.com/dbt-labs/dbt-core/issues/2593 https://github.com/dbt-labs/dbt-core/issues/903
 - index : https://docs.getdbt.com/reference/resource-configs/postgres-configs

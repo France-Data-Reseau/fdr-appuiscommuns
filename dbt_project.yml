@@ -35,9 +35,14 @@ models:
   #+on_schema_change: "sync_all_columns"
   #fdr_osmgeodatamine_powersupports:
   fdr_appuiscommuns:
+    # TODO move to _unified /_joined / _computed/enriched ?
+    # sources :
+    materialized: view
+    #staging:
+    apcom:
       materialized: table
-      #staging:
-      source:
-        materialized: view
+      # TODO separate _indicators/aggregates from _views etc.
       exploitation:
-        #materialized: view
+        #materialized: view NO rather table for performance
+    #meta:
+      #materialized: table not needed (?)

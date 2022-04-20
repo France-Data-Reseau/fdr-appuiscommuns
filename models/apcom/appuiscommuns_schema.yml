@@ -134,3 +134,9 @@ seeds:
     description: table de traduction / réconciliation de la liste de valeurs depuis la source (jeu / org) osmgeodatamine
     config:
       tags: ["link", "mapping"]
+  - name : birdz_extract
+    description: extrait représentatif des données de la source (type) birdz
+    config:
+      tags: ["sample", "example"]
+      column_types:
+        "PDR_NUM,C,254": text # sinon 29051_00040 lu comme 2905100040 (!), type détecté comme integer et erreur integer out of range
