@@ -76,7 +76,7 @@ models:
               config:
                 #description: 'tttest' # KO not seen in docs UI
                 where: "\"fdrcommune__insee_id\" not in ('98712', '98715', '98722', '98725', '98729', '98735', '98738', '98747', '98752', '98802', '98803', '98805', '98807', '98808', '98810', '98811', '98812', '98813', '98816', '98817', '98818', '98821', '98825', '98826', '98827', '98828', '98829', '98831', '98832', '98833')"
-  - name: osmgeodatamine_powsupp__appuiscommuns_supportaerien
+  - name: osm_powsupp__appuiscommuns_supportaerien
     description: la normalisation en supportaerien de la source ...extract...
     config:
       tags: ['normalization', 'transformation'] # 'pii' TODO generate from source__type.sql (and rename it)

@@ -31,6 +31,8 @@ seeds:
 #        +enabled: false
 
 models:
+  # enable incremental schema update : TODO for now KO because doesn't quote field https://github.com/dbt-labs/dbt-core/issues/4423
+  #+on_schema_change: "sync_all_columns"
   #fdr_osmgeodatamine_powersupports:
   fdr_appuiscommuns:
       materialized: table

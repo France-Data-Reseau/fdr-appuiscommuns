@@ -31,7 +31,7 @@ with link_candidates as (
     --FROM computed, {{ source('france-data-reseau', 'georef-france-commune.csv') }} c
     FROM {{ translated_source }}, {{ ref('georef-france-commune.csv') }} c
     --WHERE ST_Contains(ST_GeometryFromText(ST_AsText(c.geo_shape), 4326), {{ translated_source }}.geometry) and c.com_code is not null -- TODO patch source geometry to 4326 SRID
-    WHERE ST_Contains(c.geo_shape, {{ translated_source }}.geometry) and c.com_code is not null -- ! removes communes of Nouvelle Calédonie etc.
+    WHERE ST_Contains(c.geo_shape_4326, {{ translated_source }}.geometry) and c.com_code is not null -- ! removes communes of Nouvelle Calédonie etc.
 
 ), link_candidate_array as (
     -- no performance change, else 2 array_agg would gave to be inlined ;
