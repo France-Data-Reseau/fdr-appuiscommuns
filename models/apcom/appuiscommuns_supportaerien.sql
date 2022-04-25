@@ -36,7 +36,8 @@ with all1 as (
 
 {{ dbt_utils.union_relations(relations=[
       ref('appuiscommuns_supportaerien__definition'),
-      ref('osm_powsupp__appuiscommuns_supportaerien')],
+      ref('osm_powsupp__appuiscommuns_supportaerien'),
+      ref('birdz__apcom_supportaerien')],
     column_override={"geometry": "geometry"})
 }}
 
@@ -57,7 +58,7 @@ NB. way too long without table materialization and indexing
     -- reconciliation :
     -- NB. reconciliation to communes requires a geometry field, so can't be done on the source (and is more efficient being in a table)
     -- moreover, commune is not necessary for other translation handlings (dedup...). And doing it after translation allows to do it all in one go.
-    {%- set fields = adapter.get_columns_in_relation(ref('appuiscommuns_supportaerien__definition')) | map(attribute="name") | list -%}-- BEWARE without | list it stays a generator that can only be iterated once
+    {%- set fields = ['_dbt_source_relation'] + adapter.get_columns_in_relation(ref('appuiscommuns_supportaerien__definition')) | map(attribute="name") | list -%}-- BEWARE without | list it stays a generator that can only be iterated once
     {#% set cols = dbt_utils.star(sourceModel, except=[
           fieldPrefix + "fdrcommune__insee_id",
           fieldPrefix + "commune__insee_id",

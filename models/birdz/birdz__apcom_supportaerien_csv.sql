@@ -2,7 +2,7 @@
 version csv-isable (voir macro)
 
 TODO generate
-'appuiscommuns__supportaerien_indicators_region'
+'birdz__apcom_supportaerien'
 #}
 
 {{
@@ -11,4 +11,4 @@ TODO generate
   )
 }}
 
-{{ to_csv(ref(model.name[:-4])) }}
+{{ to_csv() }}

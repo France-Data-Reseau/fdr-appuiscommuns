@@ -7,7 +7,16 @@ Methodology :
 2. add line(s) to contain further values for until they are covering for all columns
 3. NB. examples specific to each source type are provided in _source_example along their implementation (for which they are covering)
 
+TODO can't be replaced by from_csv because is the actual definition, BUT could be by guided by metamodel !
+{{ apcom_supportaerien_from_csv(ref(model.name[:-4])) }}
+
 #}
+
+{{
+  config(
+    materialized="view"
+  )
+}}
 
 {% set containerUrl = 'http://' + 'datalake.francedatareseau.fr' %}
 {% set typeUrlPrefix = containerUrl + '/dc/type/' %}
@@ -25,8 +34,9 @@ Methodology :
 
 select
     {{ dbt_utils.star(ref('appuiscommuns_supportaerien__example'),
-        except=[fieldPrefix + 'Id', 'geometry']) }},
-    "{{ fieldPrefix }}Id"::uuid as "{{ fieldPrefix }}Id",
+        except=[fieldPrefix + 'Id', 'geometry', fieldPrefix + 'HauteurAppui']) }},
+    "{{ fieldPrefix }}Id"::uuid,
+    "{{ fieldPrefix }}HauteurAppui"::numeric,
     ST_GeomFROMText(geometry, 4326) as geometry -- NOT ::geometry else not the same (srid ?? only visible in binary ::text form : ) therefore except does not work
     -- 0101000000197B8A77DBE0E33F18C25725ECC34740 expected
     -- 0101000020E6100000197B8A77DBE0E33F18C25725ECC34740 actual

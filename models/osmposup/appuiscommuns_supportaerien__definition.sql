@@ -6,28 +6,16 @@ Definition / interface
 Materialized as table because of these uses.
 #}
 
-{% set containerUrl = 'http://' + 'datalake.francedatareseau.fr' %}
-{% set typeUrlPrefix = containerUrl + '/dc/type/' %}
-{% set type = 'appuiscommuns_supportaerien_osmgeodatamine_powersupports_extract' %} -- spécifique à la source ; _2021 ? from this file ? prefix:typeName ?
-{% set type = 'appuiscommuns_supportaerien' %} -- _2021 ? from this file ? prefix:typeName ?
-{% set ns = 'supportaerien.appuiscommuns.francedatareseau.fr' %} -- ?
-{% set typeName = 'SupportAerien' %}
-{% set sourcePrefix = 'osmpowersupports' %} -- ?
-{% set prefix = 'appuiscommunssupp' %} -- ?
-{% set sourceFieldPrefix = sourcePrefix + ':' %}
-{% set sourceFieldPrefix = sourcePrefix + '__' %}
-{% set fieldPrefix = prefix + ':' %}
-{% set fieldPrefix = prefix + '__' %}
-{% set idUrlPrefix = typeUrlPrefix + type + '/' %}
-
 {{
   config(
-    materialized="table"
+    materialized="view"
   )
 }}
 
+{% set source_model = ref('appuiscommuns_supportaerien__example_stg') %}
+
 select
-    {{ dbt_utils.star(ref('appuiscommuns_supportaerien__example_stg')) }}
+    {{ dbt_utils.star(source_model) }}
     
-    from {{ ref('appuiscommuns_supportaerien__example_stg') }} -- TODO raw_
+    from {{ source_model }} -- TODO raw_
     limit 0

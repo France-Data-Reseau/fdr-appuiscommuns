@@ -5,7 +5,7 @@ Partie spécifique à la source
 - OU à chaque fois pour plus de concision et lisibilité select * (les champs en trop sont alors enlevés à la fin par la __definition) ?
 #}
 
-{% macro osm_powsupp__apcom_supportaerien_specific(source_relation) %}
+{% macro osm_powsupp__apcom_supportaerien(source_relation) %}
 
 {% set containerUrl = 'http://' + 'datalake.francedatareseau.fr' %}
 {% set typeUrlPrefix = containerUrl + '/dc/type/' %}
@@ -33,25 +33,25 @@ with source as (
 renamed as (
 
     select
-        'osmgeodatamine_powersupports_extract' as "{{ fieldPrefix }}src_name", -- source name (else won't have it anymore once unified with other sources)
+        '{{ source_relation }}' as "{{ fieldPrefix }}src_name", -- source name (else won't have it anymore once unified with other sources)
         --id as "{{ fieldPrefix }}src_index", -- index in source
-        "osm_id" as "{{ fieldPrefix }}src_id", -- source own id
-        "X", -- as "{{ sourceFieldPrefix }}x",
-        "Y", -- as "{{ sourceFieldPrefix }}x",
-        "utility" as "{{ sourceFieldPrefix }}utility", -- power
-        "nature" as "{{ sourceFieldPrefix }}nature", -- pole, tower TODO dict conv
-        "operator" as "{{ fieldPrefix }}Gestionnaire",
-        "material" as "{{ sourceFieldPrefix }}material", -- TODO dict conv
-        "height" as "{{ fieldPrefix }}HauteurAppui__s", -- flacombe : et non HauteurTotal ! TODO H/hauteur ? __m ?? car "emental" dans les données 1m lignes
-        "reference" as "{{ fieldPrefix }}CodeExterne", -- ?? 101, 87, 37081ER073...
-        "line_attachment" as "{{ sourceFieldPrefix }}line_attachment", -- ? suspension, pin, anchor...
-        "line_management" as "{{ sourceFieldPrefix }}line_management", -- ? split, branch, cross...
-        "transition" as "{{ sourceFieldPrefix }}transition", -- ? yes
-        "com_insee" as "{{ fieldPrefix }}commune_insee_id", -- sert à enriched qui est indépendant de la source, donc sourceFieldPrefix ne suffirait pas ; alternative plus précise
-        "com_insee" as "fdrcommune__insee_id", -- alternative plus facile à réconcilier
-        "com_insee" as "{{ fieldPrefix }}fdrcommune__insee_id", -- TODO OU les deux OUI (comme un chemin)
-        "com_nom" as "{{ fieldPrefix }}commune_nom", -- enrichissement mminimal pour rendre code insee lisible ?
-        "com_nom" as "{{ fieldPrefix }}fdrcommune__nom" -- TODO OU OUI (et le fait que insee_id est déjà un id / unique permettra de savoir qu'il n'y a pas besoin de nom pour réconcillier)
+        "osm_id"::text as "{{ fieldPrefix }}src_id", -- source own id
+        "X"::numeric, -- as "{{ sourceFieldPrefix }}x",
+        "Y"::numeric, -- as "{{ sourceFieldPrefix }}x",
+        "utility"::text as "{{ sourceFieldPrefix }}utility", -- power
+        "nature"::text as "{{ sourceFieldPrefix }}nature", -- pole, tower TODO dict conv
+        "operator"::text as "{{ fieldPrefix }}Gestionnaire",
+        "material"::text as "{{ sourceFieldPrefix }}material", -- TODO dict conv
+        "height"::text as "{{ fieldPrefix }}HauteurAppui__s", -- flacombe : et non HauteurTotal ! TODO H/hauteur ? __m ?? car "emental" dans les données 1m lignes
+        "reference"::text as "{{ fieldPrefix }}CodeExterne", -- ?? 101, 87, 37081ER073...
+        "line_attachment"::text as "{{ sourceFieldPrefix }}line_attachment", -- ? suspension, pin, anchor...
+        "line_management"::text as "{{ sourceFieldPrefix }}line_management", -- ? split, branch, cross...
+        "transition"::text as "{{ sourceFieldPrefix }}transition", -- ? yes
+        "com_insee"::text as "{{ fieldPrefix }}commune_insee_id", -- sert à enriched qui est indépendant de la source, donc sourceFieldPrefix ne suffirait pas ; alternative plus précise
+        "com_insee"::text as "fdrcommune__insee_id", -- alternative plus facile à réconcilier
+        "com_insee"::text as "{{ fieldPrefix }}fdrcommune__insee_id", -- TODO OU les deux OUI (comme un chemin)
+        "com_nom"::text as "{{ fieldPrefix }}commune_nom", -- enrichissement mminimal pour rendre code insee lisible ?
+        "com_nom"::text as "{{ fieldPrefix }}fdrcommune__nom" -- TODO OU OUI (et le fait que insee_id est déjà un id / unique permettra de savoir qu'il n'y a pas besoin de nom pour réconcillier)
 
     from source
 

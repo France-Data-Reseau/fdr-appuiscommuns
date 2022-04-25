@@ -2,6 +2,10 @@
 Defines useful UDFs :
 - lenient cast / conversion
 
+To use them, they have to be prefixed by the current schema (because they are created here, else no rights),
+and arguments must have the exact right type, ex. :
+{{ schema }}.to_date_or_null("{{ sourceFieldPrefix }}DateConstruction__s", 'DD/MM/YY'::text)
+
 Must be called as a DBT pre-hook.
 Big UDFs should be defined in their own files and only referenced there.
 Follows the principles described at :
