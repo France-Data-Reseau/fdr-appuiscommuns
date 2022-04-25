@@ -21,5 +21,5 @@ select
       "geo_point_2d",
       "geo_shape"]) }},
     ST_PointFromText('POINT(' || replace(c.geo_point_2d, ',', ' ') || ')', 4326) as geo_point_4326,
-    ST_GeomFROMText(ST_AsText(ST_GeomFromGeoJSON(c.geo_shape)), 4326) as geo_shape_4326
+    ST_Transform(ST_GeomFromGeoJSON(c.geo_shape), 4326) as geo_shape_4326
 from {{ source('france-data-reseau', 'georef-france-commune.csv') }} c

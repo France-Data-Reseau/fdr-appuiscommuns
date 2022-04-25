@@ -22,5 +22,5 @@ geojson version could be kept to not to have to regenerate it for CSV output (TO
 select
     {{ dbt_utils.star(source('france-data-reseau', 'georef-france-region.csv')) }},
     ST_PointFromText('POINT(' || replace(c."Geo Point", ',', ' ') || ')', 4326) as geo_point_4326,
-    ST_GeomFROMText(ST_AsText(ST_GeomFromGeoJSON(c."Geo Shape")), 4326) as geo_shape_4326
+    ST_Transform(ST_GeomFromGeoJSON(c."Geo Shape"), 4326) as geo_shape_4326
 from {{ source('france-data-reseau', 'georef-france-region.csv') }} c
