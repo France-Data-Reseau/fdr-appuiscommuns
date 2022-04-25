@@ -4,7 +4,7 @@ version: 2
 # tests génériques de contrainte de schéma pour le modèle de données du cas d'usage "appuis communs"
 models:
   - name: osm_posup__apcom_supportaerien__expected_stg
-    description: "TODO move test unitaire en --target test de transformation (normalisation) : attendu préparé portant la définition du test unitaire et permettant de la désactiver"
+    description: "test unitaire en --target test de transformation (normalisation) : attendu préparé portant la définition du test unitaire et permettant de la désactiver"
     # (sinon laisser le test mais le comparer avec le même plutôt que le réel, mais ça laisse un test dépourvu de sens)
     config:
       tags: ['expected', 'test'] # 'pii' TODO generate from ....sql (and rename it)
@@ -12,6 +12,20 @@ models:
     tests:
       - dbt_utils.equality:
           compare_model: ref('osm_powsupp__appuiscommuns_supportaerien') # TODO sur exemple démarqué, une fois --target fini ; PAS directement __expected pour gérer le parsing nécessaire (uuid... ; le même code sert à charger les exemples embarqués ex. __definition, donc mieux qu'en sens inverse) ; TODO déplacer sur la normalization mais comme elle a des champs propres pour l'instant ici (qui a en plus le champ _dbt_source_relation)
+  - name: osm_powsupp__appuiscommuns_supportaerien
+    description: la normalisation en supportaerien de la source ...extract...
+    config:
+      tags: ['normalization', 'transformation'] # 'pii' TODO generate from source__type.sql (and rename it)
+      meta: { "type" : "supportaerien" } # TODO definition: _definition ou de type ou invt., source/in: osm_
+  - name: birdz__apcom_supportaerien__expected_stg
+    description: "test unitaire en --target test de transformation (normalisation) : attendu préparé portant la définition du test unitaire et permettant de la désactiver"
+    # (sinon laisser le test mais le comparer avec le même plutôt que le réel, mais ça laisse un test dépourvu de sens)
+    config:
+      tags: [ 'expected', 'test' ] # 'pii' TODO generate from ....sql (and rename it)
+      enabled: "{{ target.name == 'test' }}"
+    tests:
+      - dbt_utils.equality:
+          compare_model: ref('birdz__apcom_supportaerien') # TODO sur exemple démarqué, une fois --target fini ; PAS directement __expected pour gérer le parsing nécessaire (uuid... ; le même code sert à charger les exemples embarqués ex. __definition, donc mieux qu'en sens inverse) ; TODO déplacer sur la normalization mais comme elle a des champs propres pour l'instant ici (qui a en plus le champ _dbt_source_relation)
   - name: appuiscommuns_supportaerien
     description: l'union des supportaerien des toutes les sources
     config:
@@ -76,25 +90,6 @@ models:
               config:
                 #description: 'tttest' # KO not seen in docs UI
                 where: "\"appuiscommunssupp__fdrcommune__insee_id\" not in ('ko', '98712', '98715', '98722', '98725', '98729', '98735', '98738', '98747', '98752', '98802', '98803', '98805', '98807', '98808', '98810', '98811', '98812', '98813', '98816', '98817', '98818', '98821', '98825', '98826', '98827', '98828', '98829', '98831', '98832', '98833')"
-  - name: osm_powsupp__appuiscommuns_supportaerien
-    description: la normalisation en supportaerien de la source ...extract...
-    config:
-      tags: ['normalization', 'transformation'] # 'pii' TODO generate from source__type.sql (and rename it)
-      meta: { "type" : "supportaerien" } # TODO definition: _definition ou de type ou invt., source/in: osm_
-    #columns:
-    #  - name: appuiscommunssupp__src_name # required else model tests below not run !?!
-    #tests:
-    #  - dbt_utils.equality:
-    #      compare_model: ref('osm_powersupports__supportaerien__expected_stg') # TODO sur exemple démarqué, une fois --target fini ; PAS directement __expected pour gérer le parsing nécessaire (uuid... ; le même code sert à charger les exemples embarqués ex. __definition, donc mieux qu'en sens inverse) ; MAIS pb
-  - name: birdz__apcom_supportaerien__expected_stg
-    description: "test unitaire en --target test de transformation (normalisation) : attendu préparé portant la définition du test unitaire et permettant de la désactiver"
-    # (sinon laisser le test mais le comparer avec le même plutôt que le réel, mais ça laisse un test dépourvu de sens)
-    config:
-      tags: [ 'expected', 'test' ] # 'pii' TODO generate from ....sql (and rename it)
-      enabled: "{{ target.name == 'test' }}"
-    tests:
-      - dbt_utils.equality:
-          compare_model: ref('birdz__apcom_supportaerien') # TODO sur exemple démarqué, une fois --target fini ; PAS directement __expected pour gérer le parsing nécessaire (uuid... ; le même code sert à charger les exemples embarqués ex. __definition, donc mieux qu'en sens inverse) ; TODO déplacer sur la normalization mais comme elle a des champs propres pour l'instant ici (qui a en plus le champ _dbt_source_relation)
 
 seeds:
   #- name: appuiscommuns_supportaerien__definition
