@@ -1,0 +1,15 @@
+X,Y,osm_id,utility,nature,operator,material,height,reference,line_attachment,line_management,transition,com_insee,com_nom
+0.6514814,47.4822627000576,node/1323154028,power,tower,Coop. d'Electricit de Saint-Martin de Londres,,ko,,,,,ko,Saint-Antoine-du-Rocher
+0.6,47.9,node/example,power,tower,id deduped with next one,,23,101,,,,37206,Saint-Antoine-du-Rocher
+0.6,47.9,node/example,power,tower,geo deduped with next one,,23,101,,,,37206,Saint-Antoine-du-Rocher
+0.6,47.9,node/example2,power,tower,geo near deduped with next one,,23,101,,,,37206,Saint-Antoine-du-Rocher
+0.6000001,47.9000000000001,node/example3,power,tower,,,23,101,,,,37206,Saint-Antoine-du-Rocher
+0.6481917,47.4907889000557,node/5528573744,power,tower,RTE,,23,101,,,,37206,Saint-Antoine-du-Rocher
+0.3488225,47.4511357000646,node/8746750517,power,pole,Enedis,concrete,,,anchor,,,37081,Cléré-les-Pins
+0.3493785,47.4509197000646,node/8746749717,power,pole,Enedis,concrete,,,suspension,,,37081,Cléré-les-Pins
+0.3447134,47.4466881000655,node/8752711320,power,pole,Enedis,concrete,,,pin,,,37081,Cléré-les-Pins
+0.4033639,47.440334600067,node/8757325618,power,pole,Enedis,metal,,,suspension,,,37081,Cléré-les-Pins
+0.4025115,47.4413605000668,node/8757320717,power,pole,Enedis,concrete,,,anchor,split,yes,37081,Cléré-les-Pins
+0.3818468,47.4552730000636,node/8733394617,power,pole,Enedis,concrete,,,(suspension)|(anchor),branch,,37081,Cléré-les-Pins
+0.3838328,47.4474131000654,node/8735855417,power,pole,Enedis,wood,,,anchor,,,37081,Cléré-les-Pins
+0.3716979,47.4470715000655,node/8733214818,power,pole,Enedis,concrete,,,anchor,cross,,37081,Cléré-les-Pins
