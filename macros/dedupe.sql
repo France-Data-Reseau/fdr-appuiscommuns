@@ -2,10 +2,21 @@
 single step deduplication
 (rather than 1. list dups couples 2. process them according to any rules (CTE on their values AND possibly enriched by human experts choices) 3. loop)
 
+TODO obviously faster if indexed on id_fields
+
+example :
+{{ dedupe('id_deduped', id_fields=['"geometry"']) }}
+
+parameters :
+- source_name : a valid SQL alias or relation reference
+- id_fields : to dedupe on
+- order_by : to resolve dedupe in addition to id fields
+- where : filter ex. to remove those without id fields or get a subset
+
 The best method varies depending on the database server.
 #}
 
-{% macro dedupe(source_name, id_fields, order_by, where=None) %}
+{% macro dedupe(source_name, id_fields, order_by=None, where=None) %}
 
 {#
 Postgresql :
