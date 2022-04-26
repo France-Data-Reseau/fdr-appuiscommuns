@@ -11,7 +11,7 @@ parameters :
 - field_min_cast_types : type of fields that need to be cast back from text after min() step outside id_field
 #}
 
-{% macro apcom_supportaerien_translation__link_geometry_fdrcommune(translated_source, id_field, fields, field_min_cast_types, order_by=None) %}
+{% macro apcom_supportaerien_translation__link_geometry_fdrcommune(translated_source, id_field, fields, order_by=None) %}
 
 {% set field_min_cast_types = { "geometry" : "geometry" } %}
 
@@ -48,7 +48,10 @@ with link_candidates as (
     select
         link_candidates."{{ id_field }}", -- !!! uuid does not support min() ; or (ARRAY_AGG("{{ id_field }}") FILTER (WHERE "{{ id_field }}" IS NOT NULL))[1] as "{{ id_field }}",
         {% for field in fields | reject("eq", "fdrcommune__insee_id") | reject("eq", id_field) %}
-          min(link_candidates.{{ adapter.quote(field) }}){{ "::" ~ field_min_cast_types.get(field) if field_min_cast_types.get(field) else "" }} as {{ adapter.quote(field) }},
+          -- min requires re cast in case of ex. geometry :
+          --min(link_candidates.{{ adapter.quote(field) }}){{ "::" ~ field_min_cast_types.get(field) if field_min_cast_types.get(field) else "" }} as {{ adapter.quote(field) }},
+          -- ARRAY_AGG is simpler and maybe as fast but might take any value whatever the order (which is not a problem here) :
+          (ARRAY_AGG(link_candidates.{{ adapter.quote(field) }}) FILTER (WHERE link_candidates.{{ adapter.quote(field) }} IS NOT NULL))[1] as {{ adapter.quote(field) }},
         {% endfor %}
         --link_candidates.*,--"{{ fieldPrefix }}Id",
         --(ARRAY_AGG("fdrcommune__insee_id") FILTER (WHERE "fdrcommune__insee_id" IS NOT NULL order by "updated" desc limit 1))[1] as "fdrcommune__insee_id",
