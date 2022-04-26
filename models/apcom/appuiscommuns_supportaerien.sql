@@ -63,7 +63,7 @@ NB. way too long without table materialization and indexing
           fieldPrefix + "fdrcommune__insee_id",
           fieldPrefix + "commune__insee_id",
           "fdrcommune__insee_id"]).split(',') %#}
-    {{ apcom_supportaerien_translation__link_geometry_fdrcommune("all1", id_field="appuiscommunssupp__Id", fields=fields) }}
+    {{ apcom_supportaerien_translation__link_geometry_fdrcommune("all1", id_field="appuiscommunssupp__Id", fields=fields, field_min_cast_types={"geometry":"geometry"}) }}
 )
 
 select * from commune_linked
