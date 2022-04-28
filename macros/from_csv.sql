@@ -18,11 +18,13 @@ parameters :
 - column_models : used to guide parsing of values from text and add missing columns as NULL if enabled (complete_columns_with_null)
 Only the first column with a given name is kept?
 - complete_columns_with_null
+- wkt_rather_than_geosjon
+- date_formats : in the order of parsing preference, by default : 'YYYY-MM-DDTHH24:mi:ss.SSS' (RFC3339), 'YYYY/MM/DD HH24:mi:ss.SSS', 'DD/MM/YYYY HH24:mi:ss.SSS'
 
 optional_column_model_TODO_or_types
 #}
 
-{% macro from_csv(source, column_models=none, complete_columns_with_null=false, wkt_rather_than_geosjon=false) %}
+{% macro from_csv(source, column_models=none, complete_columns_with_null=false, wkt_rather_than_geosjon=false, date_formats=['YYYY-MM-DDTHH24:mi:ss.SSS', 'YYYY/MM/DD HH24:mi:ss.SSS', 'DD/MM/YYYY HH24:mi:ss.SSS']) %}
 
 {%- set cols = adapter.get_columns_in_relation(source) | list -%}
 {%- set col_names = cols | map(attribute='name') | list -%}
@@ -64,9 +66,11 @@ select
         {% elif modules.re.match(".*__Id", col.name) %}
           {{ source }}.{{ adapter.quote(col.name) }}::uuid
         {% elif col.is_numeric() %}
-          {{ source }}.{{ adapter.quote(col.name) }}::numeric -- ?
+          { schema }}.to_numeric_or_null({{ source }}.{{ adapter.quote(col.name) }}) -- or merely ::numeric ?
         {% elif col.data_type == 'date' %}
-          {{ source }}.{{ adapter.quote(col.name) }}::date -- ?
+          {{ schema }}.to_date_or_null({{ source }}.{{ adapter.quote(col.name) }}::text, {% for fmt in date_formats %}'{{ fmt }}'::text{% if not loop.last %}, {% endif %}{% endfor %}) as {{ adapter.quote(col.name) }}
+        {% elif col.data_type == 'boolean' %}
+          { schema }}.to_boolean_or_null({{ source }}.{{ adapter.quote(col.name) }}) -- ? allows for 'oui'
         {% elif col.is_string() %}
           {{ source }}.{{ adapter.quote(col.name) }} -- ?
         {% else %}

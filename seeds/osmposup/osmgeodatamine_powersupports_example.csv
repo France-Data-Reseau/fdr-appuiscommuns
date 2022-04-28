@@ -14,3 +14,4 @@ X,Y,osm_id,utility,nature,operator,material,height,reference,line_attachment,lin
 0.3818468,47.4552730000636,node/8733394617,power,pole,Enedis,concrete,,,(suspension)|(anchor),branch,,37081,Cléré-les-Pins
 0.3838328,47.4474131000654,node/8735855417,power,pole,Enedis,wood,,,anchor,,,37081,Cléré-les-Pins
 0.3716979,47.4470715000655,node/8733214818,power,pole,Enedis,concrete,,,anchor,cross,,37081,Cléré-les-Pins
+8.8367152,41.6352330004563,node/8087662776,power,pole,EDF SEI,,,,,,,2A035,Belvédère-Campomoro

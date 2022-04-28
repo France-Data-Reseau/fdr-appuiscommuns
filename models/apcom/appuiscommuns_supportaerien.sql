@@ -36,8 +36,9 @@ with all1 as (
 
 {{ dbt_utils.union_relations(relations=[
       ref('appuiscommuns_supportaerien__definition'),
-      ref('osm_powsupp__appuiscommuns_supportaerien'),
-      ref('birdz__apcom_supportaerien')],
+      ref('megalis__apcom_supportaerien'),
+      ref('birdz__apcom_supportaerien'),
+      ref('osm_powsupp__appuiscommuns_supportaerien')],
     column_override={"geometry": "geometry"})
 }}
 

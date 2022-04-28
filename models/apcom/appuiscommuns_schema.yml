@@ -3,6 +3,24 @@ version: 2
 
 # tests génériques de contrainte de schéma pour le modèle de données du cas d'usage "appuis communs"
 models:
+  - name: megalis__apcom_supportaerien__expected_stg
+    description: "test unitaire en --target test de transformation (normalisation) : attendu préparé portant la définition du test unitaire et permettant de la désactiver"
+    # (sinon laisser le test mais le comparer avec le même plutôt que le réel, mais ça laisse un test dépourvu de sens)
+    config:
+      tags: [ 'expected', 'test' ] # 'pii' TODO generate from ....sql (and rename it)
+      enabled: "{{ target.name == 'test' }}"
+    tests:
+      - dbt_utils.equality:
+          compare_model: ref('megalis__apcom_supportaerien') # TODO sur exemple démarqué, une fois --target fini ; PAS directement __expected pour gérer le parsing nécessaire (uuid... ; le même code sert à charger les exemples embarqués ex. __definition, donc mieux qu'en sens inverse) ; TODO déplacer sur la normalization mais comme elle a des champs propres pour l'instant ici (qui a en plus le champ _dbt_source_relation)
+  - name: birdz__apcom_supportaerien__expected_stg
+    description: "test unitaire en --target test de transformation (normalisation) : attendu préparé portant la définition du test unitaire et permettant de la désactiver"
+    # (sinon laisser le test mais le comparer avec le même plutôt que le réel, mais ça laisse un test dépourvu de sens)
+    config:
+      tags: [ 'expected', 'test' ] # 'pii' TODO generate from ....sql (and rename it)
+      enabled: "{{ target.name == 'test' }}"
+    tests:
+      - dbt_utils.equality:
+          compare_model: ref('birdz__apcom_supportaerien') # TODO sur exemple démarqué, une fois --target fini ; PAS directement __expected pour gérer le parsing nécessaire (uuid... ; le même code sert à charger les exemples embarqués ex. __definition, donc mieux qu'en sens inverse) ; TODO déplacer sur la normalization mais comme elle a des champs propres pour l'instant ici (qui a en plus le champ _dbt_source_relation)
   - name: osm_posup__apcom_supportaerien__expected_stg
     description: "test unitaire en --target test de transformation (normalisation) : attendu préparé portant la définition du test unitaire et permettant de la désactiver"
     # (sinon laisser le test mais le comparer avec le même plutôt que le réel, mais ça laisse un test dépourvu de sens)
@@ -17,15 +35,6 @@ models:
     config:
       tags: ['normalization', 'transformation'] # 'pii' TODO generate from source__type.sql (and rename it)
       meta: { "type" : "supportaerien" } # TODO definition: _definition ou de type ou invt., source/in: osm_
-  - name: birdz__apcom_supportaerien__expected_stg
-    description: "test unitaire en --target test de transformation (normalisation) : attendu préparé portant la définition du test unitaire et permettant de la désactiver"
-    # (sinon laisser le test mais le comparer avec le même plutôt que le réel, mais ça laisse un test dépourvu de sens)
-    config:
-      tags: [ 'expected', 'test' ] # 'pii' TODO generate from ....sql (and rename it)
-      enabled: "{{ target.name == 'test' }}"
-    tests:
-      - dbt_utils.equality:
-          compare_model: ref('birdz__apcom_supportaerien') # TODO sur exemple démarqué, une fois --target fini ; PAS directement __expected pour gérer le parsing nécessaire (uuid... ; le même code sert à charger les exemples embarqués ex. __definition, donc mieux qu'en sens inverse) ; TODO déplacer sur la normalization mais comme elle a des champs propres pour l'instant ici (qui a en plus le champ _dbt_source_relation)
   - name: appuiscommuns_supportaerien
     description: l'union des supportaerien des toutes les sources
     config:
@@ -71,8 +80,8 @@ models:
         tags: ['l_pointaccueil_nature'] # TODO better naming allowing to generate relationships test and (?) (_)_enriched.sql model, generate from type_definition column name
         tests:
           - relationships:
-              to: ref("l_pointaccueil_nature__mapping")
-              field: '"appuiscommunssupp__Nature"'
+              to: ref("l_pointaccueil_nature")
+              field: '"Valeur"'
       - name: '"appuiscommunssupp__HauteurAppui"'
         tests:
           - dbt_utils.accepted_range:
@@ -141,6 +150,29 @@ seeds:
     description: table de traduction / réconciliation de la liste de valeurs depuis la source (jeu / org) osmgeodatamine
     config:
       tags: ["link", "mapping"]
+  - name: megalis_supportaerien_example
+    description: extrait représentatif des données de la source (type) megalis
+    config:
+      tags: [ "sample", "example" ]
+      #column_types: TODO
+  - name: megalis__apcom_supportaerien__expected
+    description: attendu de la normalisation megalis
+    config:
+      tags: [ "unittest", "expected" ]
+      column_types:
+        # (anyway all should be read as text by dbt seed)
+        appuiscommunssupp__src_id: text # sinon integer out of range because dbt agate skips middle _
+        geometry: text # sinon integer car NULL pour l'instant...
+        appuiscommunssupp__Materiau: text
+        appuiscommunssupp__Nature: text
+        appuiscommunssupp__CompositionAppui: text
+        appuiscommunssupp__Gestionnaire: text
+        appuiscommunssupp__CodeExterne: text # sinon integer cannot be matched
+        appuiscommunssupp__StructureAppui: text
+        # and many more gthdv2__ are gotten wrong...
+        appuiscommunssupp__commune_insee_id: text # sinon integer et le code 01001 devient 1001
+        fdrcommune__insee_id: text # sinon integer et le code 01001 devient 1001
+        appuiscommunssupp__fdrcommune__insee_id: text # sinon integer et le code 01001 devient 1001
   - name : birdz_supportaerien_example
     description: extrait représentatif des données de la source (type) birdz
     config:

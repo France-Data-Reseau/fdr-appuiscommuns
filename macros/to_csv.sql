@@ -28,6 +28,7 @@ select
           array_to_json({{ source }}.{{ adapter.quote(col.name) }}) as {{ adapter.quote(col.name) }}
         {% elif col.is_string() or col.is_numeric() %}
           {{ source }}.{{ adapter.quote(col.name) }}
+        {# % elif col.data_type == 'date' % ::text transforms date to rfc3339 by default i.e. 'YYYY-MM-DDTHH24:mi:ss.SSS' #}
         {% else %}
           {{ source }}.{{ adapter.quote(col.name) }}::text
         {% endif %}

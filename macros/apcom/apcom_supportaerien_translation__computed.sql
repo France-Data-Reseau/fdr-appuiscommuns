@@ -1,9 +1,13 @@
 {#
 Normalisation vers le modèle de données du cas d'usage "appuiscommuns" des données de type canalisation de la source "osmgeodatamine_powersupports"
 Partie générique - computed, utilisé dans osm_powsupp__apcom_supportaerien_translated
+
+parameters :
+- mapping_model_suffix : if set to ex. "osm" allows to use ex. l_pointaccueil_nature__osm rather than l_pointaccueil_nature
+to compute Nature from Materiau
 #}
 
-{% macro apcom_supportaerien_translation__computed(translated_source_model_name) %}
+{% macro apcom_supportaerien_translation__computed(translated_source_model_name, mapping_model_suffix="") %}
 
 {% set containerUrl = 'http://' + 'datalake.francedatareseau.fr' %}
 {% set typeUrlPrefix = containerUrl + '/dc/type/' %}
@@ -23,12 +27,13 @@ Partie générique - computed, utilisé dans osm_powsupp__apcom_supportaerien_tr
     select
         {#{ dbt_utils.star(ref(translated_source_model_name), except=[
           fieldPrefix + "TypePhysique",
-          fieldPrefix + "Nature"]) }#}{{ translated_source_model_name }}.*,
-        'APPUI' as "{{ fieldPrefix }}TypePhysique", -- vu que toujours pole ou tower (ou CASE WHEN ?)
-        {{ ref('l_pointaccueil_nature__mapping') }}."{{ fieldPrefix }}Nature" -- 'POTEAU BOIS'
+          fieldPrefix + "Nature"]) }#}
+        {{ translated_source_model_name }}.*,
+        'APPUI' as "{{ fieldPrefix }}TypePhysique", -- toujours dans le cas d'usage (OSM : toujours pole ou tower)
+        nature."Valeur" as "{{ fieldPrefix }}Nature" -- 'POTEAU BOIS'
         
-    from {{ translated_source_model_name }}{#{ ref(translated_source_model_name) }#}
-        left join {{ ref('l_pointaccueil_nature__mapping') }} -- LEFT join sinon seulement les lignes qui ont une valeur !! TODO indicateur count pour le vérifier
-            on {{ translated_source_model_name }}{#{ ref(translated_source_model_name) }#}."{{ fieldPrefix }}Materiau" = {{ ref('l_pointaccueil_nature__mapping') }}."Valeur"
+    from {{ translated_source_model_name }}
+        left join {{ ref('l_pointaccueil_nature' ~ mapping_model_suffix) }} nature -- LEFT join sinon seulement les lignes qui ont une valeur !! TODO indicateur count pour le vérifier
+            on nature."{{ fieldPrefix }}Materiau" = nature."Valeur"
           
 {% endmacro %}
