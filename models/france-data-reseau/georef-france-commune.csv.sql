@@ -3,6 +3,8 @@ geo indexed version ("staging" version in the words of DBT) of the CKAN imported
 TODO move it in the fdr_francedatareseau DBT project.
 NB. might be auto generated.
 
+37s on 34978 lines
+
 geojson version could be kept to not to have to regenerate it for CSV output (TODO generate it everywhere, as in _csv.sql) :
 , except=[
       "geo_point_2d",

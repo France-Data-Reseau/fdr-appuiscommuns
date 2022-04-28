@@ -1,5 +1,5 @@
 {#
-Normalisation vers le modèle de données du cas d'usage "appuiscommuns" des données de type canalisation de la source "osmgeodatamine_powersupports"
+Normalisation vers le modèle de données du cas d'usage "appuiscommuns" des données de type supportaerien de la source "osmgeodatamine_powersupports"
 Partie spécifique à la source
 
 make it a table IF needed for further processing before 

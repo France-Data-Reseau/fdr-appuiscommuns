@@ -90,6 +90,7 @@ with link_candidates as (
       filtered_plus.earlier_id as "{{ id_field }}", -- !!! uuid does not support min() ; or (ARRAY_AGG("{{ id_field }}") FILTER (WHERE "{{ id_field }}" IS NOT NULL))[1] as "{{ id_field }}",
       {% for field in fields | reject("eq", id_field) %}
         -- get not null appearing first according to src_name (ex. OSM last) and bigger src_id (most recent first) :
+        -- order see https://stackoverflow.com/questions/7317475/postgresql-array-agg-order
         (ARRAY_AGG(all1.{{ adapter.quote(field) }} ORDER BY earlier_src_name ASC, earlier_src_id DESC) FILTER (WHERE all1.{{ adapter.quote(field) }} IS NOT NULL))[1] as {{ adapter.quote(field) }},
       {% endfor %}
       --filtered_plus.*,--"{{ fieldPrefix }}Id",

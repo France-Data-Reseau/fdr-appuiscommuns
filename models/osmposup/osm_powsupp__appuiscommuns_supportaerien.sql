@@ -4,6 +4,8 @@ Partie générique
 
 is a table only if has reconciliation
 69s with its own indexes (23s without)
+
+applies exact dedup by src_id and geometry
 #}
 
 {{

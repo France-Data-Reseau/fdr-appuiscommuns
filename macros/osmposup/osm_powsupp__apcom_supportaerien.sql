@@ -1,5 +1,6 @@
 {#
-Normalisation vers le modèle de données du cas d'usage "appuiscommuns" des données de type canalisation de la source "osmgeodatamine_powersupports"
+Normalisation vers le modèle de données du cas d'usage "appuiscommuns" des données de type supportaerien
+de la source "osmgeodatamine_powersupports"
 Partie spécifique à la source
 
 - OU à chaque fois pour plus de concision et lisibilité select * (les champs en trop sont alors enlevés à la fin par la __definition) ?

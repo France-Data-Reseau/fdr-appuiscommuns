@@ -2,6 +2,8 @@
 Normalisation vers le modèle de données du cas d'usage "eau potable" des données de type canalisation de la source d'exemple embarquée "echantillon 3"
 
 - OU à chaque fois pour plus de concision et lisibilité select * (les champs en trop sont alors enlevés à la fin par la __definition) ?
+
+assuming no need for exact dedup by src_id or geometry
 #}
 
 {{
@@ -63,7 +65,8 @@ renamed as (
         --"nature"::text as "{{ sourceFieldPrefix }}nature", -- pole, tower TODO dict conv
         --"operator"::text as "{{ fieldPrefix }}Gestionnaire",
         --NULL as "{{ fieldPrefix }}HauteurAppui",
-        --NULL as "{{ fieldPrefix }}CodeExterne" -- TODO autocompléter colonnes !
+        --NULL as "{{ fieldPrefix }}CodeExterne"
+        -- TODO autocompléter colonnes ! NON requiert UNION avec star donc pas dans translated
 
     from source
 
@@ -75,7 +78,7 @@ parsed as (
         "{{ fieldPrefix }}src_name",
         --"{{ fieldPrefix }}src_index",
         "{{ fieldPrefix }}src_id",
-        uuid_generate_v5(uuid_generate_v5(uuid_ns_dns(), '{{ ns }}}}'), "{{ fieldPrefix }}src_id") as "{{ fieldPrefix }}Id",
+        uuid_generate_v5(uuid_generate_v5(uuid_ns_dns(), '{{ ns }}'), "{{ fieldPrefix }}src_id") as "{{ fieldPrefix }}Id",
         ST_GeomFROMText('POINT(' || cast("x" as text) || ' ' || cast("y" as text) || ')', 4326) as geometry, -- OU geo_point__4326 ? prefix ?? forme ?? ou /et "Geom" ? TODO LATER s'en servir pour réconcilier si < 5m
         {{ schema }}.to_date_or_null("{{ sourceFieldPrefix }}DateConstruction__s", 'DD/MM/YY'::text) as "{{ fieldPrefix }}DateConstruction",
         "{{ sourceFieldPrefix }}ADR_NUM_VO", -- 999
