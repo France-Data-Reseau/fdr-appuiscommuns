@@ -34,6 +34,6 @@ to compute Nature from Materiau
         
     from {{ translated_source_model_name }}
         left join {{ ref('l_pointaccueil_nature' ~ mapping_model_suffix) }} nature -- LEFT join sinon seulement les lignes qui ont une valeur !! TODO indicateur count pour le vérifier
-            on nature."{{ fieldPrefix }}Materiau" = nature."Valeur"
+            on {{ translated_source_model_name }}."{{ fieldPrefix }}Materiau" = nature."{{ fieldPrefix }}Materiau"
           
 {% endmacro %}

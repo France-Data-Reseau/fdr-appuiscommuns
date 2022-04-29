@@ -88,4 +88,14 @@ exception
 end;
 $$ language plpgsql;
 
+create or replace function to_text_or_null (s text)
+  returns text
+as $$
+begin
+  return case length(trim(s)) when 0 then null else s end; -- trim accepts null
+exception
+  when others then return null;
+end;
+$$ language plpgsql;
+
 {% endmacro %}

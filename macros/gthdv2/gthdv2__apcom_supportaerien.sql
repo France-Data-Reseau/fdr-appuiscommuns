@@ -80,7 +80,7 @@ renamed as (
         "pt_avct,C,1"::text as "{{ sourceFieldPrefix }}pt_avct", -- E FK Avancement du projet
         "pt_typephy,C,1"::text as "{{ sourceFieldPrefix }}pt_typephy", -- A FK NOT NULL Type de point technique
         "pt_typelog,C,1"::text as "{{ sourceFieldPrefix }}pt_typelog", -- R FK NOT NULL Usage du point technique
-        "pt_rf_code,C,254"::text as "{{ fieldPrefix }}pt_rf_code", -- FK NOT NULL Référence
+        "pt_rf_code,C,254"::text as "{{ sourceFieldPrefix }}pt_rf_code", -- FK NOT NULL Référence
         "pt_nature,C,20"::text as "{{ sourceFieldPrefix }}pt_nature", -- PIND FK Nature du point technique
         "pt_secu,N,1,0"::text as "{{ sourceFieldPrefix }}pt_secu__s", -- 0 Le point technique est-il équipé d'un système de verrouillage, ou de tout autre système permettant d'en sécuriser l'accès ?
         "pt_occp,C,10"::text as "{{ sourceFieldPrefix }}pt_occp", -- FK Occupation
@@ -92,7 +92,7 @@ renamed as (
         "pt_a_strat,N,1,0"::text as "{{ sourceFieldPrefix }}pt_a_strat__s", -- 0 Appui stratégique. Notion Orange. disponible dans les PIT (STRATEGIQU). Extensible à d'autres types de réseaux.
         "pt_rotatio,N,6,2"::text as "{{ sourceFieldPrefix }}Azimut__s", -- 0 Angle du grand axe du point technique en degrés dans le sens rétrograde (sens des aiguilles d'une montre) à partir du Nord
         "pt_detec,N,1,0"::text as "{{ sourceFieldPrefix }}pt_detec__s", -- 0 Présence d'un boitier pour un fil de détection
-        "pt_comment,C,254"::text as "{{ fieldPrefix }}pt_comment", -- Commentaire
+        "pt_comment,C,254"::text as "{{ sourceFieldPrefix }}pt_comment", -- Commentaire
         "pt_creadat,C,24"::text as "{{ sourceFieldPrefix }}pt_creadat__s", -- 2021/03/09 00:00:00.000 Date de création de l'objet dans le S.I.
         "pt_majdate,C,24"::text as "{{ sourceFieldPrefix }}pt_majdate__s", -- Dernière date de mise à jour de l'objet dans le S.I.
         "pt_majsrc,C,254"::text as "{{ sourceFieldPrefix }}pt_majsrc", -- Source utilisée pour la mise à jour
@@ -113,7 +113,7 @@ renamed as (
         "nd_type,C,2"::text as "{{ sourceFieldPrefix }}nd_type", -- PT FK Type du nœud (se déduit de la relation d'héritage
         "nd_type_ep,C,3"::text as "{{ sourceFieldPrefix }}nd_type_ep", -- OPT FK Liste des technologies présentes (1 à 5 occurrences)
         "nd_comment,C,254"::text as "{{ sourceFieldPrefix }}nd_comment", -- Commentaires
-        "nd_dtclass,C,2"::text as "{{ fieldPrefix }}nd_dtclass", -- CLASSEPRECISION PLUTOT DE LA LONGUEUR FK Classe de précision au sens du décret DT-DICT
+        "nd_dtclass,C,2"::text as "{{ sourceFieldPrefix }}nd_dtclass", -- CLASSEPRECISION PLUTOT DE LA LONGUEUR FK Classe de précision au sens du décret DT-DICT
         "nd_geolqlt,N,7,2"::text as "{{ sourceFieldPrefix }}nd_geolqlt__s", -- 0 Précision du positionnement de l'objet, estimée en mètres. La précision doit être déduite du mode d'implantation et du support d'implantation, en tenant compte selon les cas du cumul des imprécisions : des levés ou du fond de plan (utiliser dans ce cas la classe de précision planimétrique au sens de l'arrêté du 16 septembre 2003), de l'outil de détection, des cotations, de l'éventuel report 'à main levée', etc.
         "nd_geolmod,C,4"::text as "{{ sourceFieldPrefix }}nd_geolmod", -- FK Mode d'implantation de l'objet
         "nd_geolsrc,C,254"::text as "{{ sourceFieldPrefix }}nd_geolsrc", -- Source de la géolocalisation pour préciser la source si nécessaire
@@ -123,13 +123,13 @@ renamed as (
         "nd_abddate,D"::text as "{{ sourceFieldPrefix }}nd_abddate__s", -- Date d'abandon (fin de validité) de l'objet dans le S.I.
         "nd_abdsrc,C,254"::text as "{{ sourceFieldPrefix }}nd_abdsrc", -- Motif de l'abandon de l'objet
 
-        split_part("nd_voie,C,254"::text, '/'::text, 1) as "{{ fieldPrefix }}commune_insee_id", -- sert à enriched qui est indépendant de la source, donc sourceFieldPrefix ne suffirait pas ; alternative plus précise
-        split_part("nd_voie,C,254"::text, '/'::text, 1) as "fdrcommune__insee_id", -- alternative plus facile à réconcilier
-        split_part("nd_voie,C,254"::text, '/'::text, 1) as "{{ fieldPrefix }}fdrcommune__insee_id", -- TODO OU les deux OUI (comme un chemin)
-        split_part("nd_voie,C,254"::text, '/'::text, 2) as "{{ fieldPrefix }}commune_nom", --  enrichissement mminimal pour rendre code insee lisible ?
-        split_part("nd_voie,C,254"::text, '/'::text, 2) as "{{ fieldPrefix }}fdrcommune__nom", --  TODO OU OUI (et le fait que insee_id est déjà un id / unique permettra de savoir qu'il n'y a pas besoin de nom pour réconcillier)
-        split_part("nd_voie,C,254"::text, '/'::text, 3) as "{{ sourceFieldPrefix }}rue",
-        split_part("nd_voie,C,254"::text, '/'::text, 4) as "{{ sourceFieldPrefix }}numero" -- ??
+        {{ schema }}.to_text_or_null(split_part("nd_voie,C,254"::text, '/'::text, 1)) as "{{ fieldPrefix }}commune_insee_id", -- sert à enriched qui est indépendant de la source, donc sourceFieldPrefix ne suffirait pas ; alternative plus précise
+        {{ schema }}.to_text_or_null(split_part("nd_voie,C,254"::text, '/'::text, 1)) as "fdrcommune__insee_id", -- alternative plus facile à réconcilier
+        {{ schema }}.to_text_or_null(split_part("nd_voie,C,254"::text, '/'::text, 1)) as "{{ fieldPrefix }}fdrcommune__insee_id", -- TODO OU les deux OUI (comme un chemin)
+        {{ schema }}.to_text_or_null(split_part("nd_voie,C,254"::text, '/'::text, 2)) as "{{ fieldPrefix }}commune_nom", --  enrichissement mminimal pour rendre code insee lisible ?
+        {{ schema }}.to_text_or_null(split_part("nd_voie,C,254"::text, '/'::text, 2)) as "{{ fieldPrefix }}fdrcommune__nom", --  TODO OU OUI (et le fait que insee_id est déjà un id / unique permettra de savoir qu'il n'y a pas besoin de nom pour réconcillier)
+        {{ schema }}.to_text_or_null(split_part("nd_voie,C,254"::text, '/'::text, 3)) as "{{ sourceFieldPrefix }}rue",
+        {{ schema }}.to_text_or_null(split_part("nd_voie,C,254"::text, '/'::text, 4)) as "{{ sourceFieldPrefix }}numero" -- ??
 
         -- TODO autocompléter colonnes ! NON requiert UNION avec star donc pas dans translated
 

@@ -49,36 +49,44 @@ optional_column_model_TODO_or_types
 {%- set def_cols = all_def_cols if complete_columns_with_null else (all_def_cols | selectattr("name", "in", col_names) | list) -%}
 
 select
-    {% for col in def_cols %}
-        {% if col.name not in col_names %}
-          NULL as {{ adapter.quote(col.name) }}
+    {% for def_col in def_cols %}
+        {% if def_col.name not in col_names %}
+          NULL as {{ adapter.quote(def_col.name) }}
+        {% else %}
 
-        {% elif modules.re.match("geo.*", col.name, modules.re.IGNORECASE) %}
+        -- def_col.data_type : {{ def_col.data_type }} ; def_col.name :  {{ def_col.name }} ; test : {{ modules.re.match("geo.*", def_col.name, modules.re.IGNORECASE) }}
+
+        {% if modules.re.match("geo.*", def_col.name, modules.re.IGNORECASE) %}
+          {# TODO NOT IGNORECASE #}
           {% if not wkt_rather_than_geosjon %}
-          ST_Transform(ST_GeomFromGeoJSON({{ source }}.{{ adapter.quote(col.name) }}), 4326) as {{ adapter.quote(col.name) }}
+          ST_Transform(ST_GeomFromGeoJSON({{ source }}.{{ adapter.quote(def_col.name) }}), 4326) as {{ adapter.quote(def_col.name) }}
           {% else %}
-          ST_GeomFROMText({{ source }}.{{ adapter.quote(col.name) }}, 4326) as {{ adapter.quote(col.name) }}
+          ST_GeomFROMText({{ source }}.{{ adapter.quote(def_col.name) }}, 4326) as {{ adapter.quote(def_col.name) }}
           {% endif %}
           --NOO ST_PointFromText('POINT(' || replace(c.geo_point_2d, ',', ' ') || ')', 4326) as geo_point_4326,
         {# TODO from json : according to param, example data, meta ?
-        {% elif col.data_type == 'ARRAY' %}
-          array_to_json({{ source }}.{{ adapter.quote(col.name) }}) as {{ adapter.quote(col.name) } #}
-        {% elif modules.re.match(".*__Id", col.name) %}
-          {{ source }}.{{ adapter.quote(col.name) }}::uuid
-        {% elif col.is_numeric() %}
-          { schema }}.to_numeric_or_null({{ source }}.{{ adapter.quote(col.name) }}) -- or merely ::numeric ?
-        {% elif col.data_type == 'date' %}
-          {{ schema }}.to_date_or_null({{ source }}.{{ adapter.quote(col.name) }}::text, {% for fmt in date_formats %}'{{ fmt }}'::text{% if not loop.last %}, {% endif %}{% endfor %}) as {{ adapter.quote(col.name) }}
-        {% elif col.data_type == 'boolean' %}
-          { schema }}.to_boolean_or_null({{ source }}.{{ adapter.quote(col.name) }}) -- ? allows for 'oui'
-        {% elif col.is_string() %}
-          {{ source }}.{{ adapter.quote(col.name) }} -- ?
+        {% elif def_col.data_type == 'ARRAY' %}
+          array_to_json({{ source }}.{{ adapter.quote(def_col.name) }}) as {{ adapter.quote(def_col.name) } #}
+        {% elif modules.re.match(".*__Id", def_col.name) %}
+          {{ source }}.{{ adapter.quote(def_col.name) }}::uuid
+        {% elif def_col.is_number() %}
+          {{ to_numeric_or_null(def_col.name, source) }} as {{ adapter.quote(def_col.name) }}
+          --{{ schema }}.to_numeric_or_null({{ source }}.{{ adapter.quote(def_col.name) }}) as {{ adapter.quote(def_col.name) }} -- or merely ::numeric ?
+          --{{ source }}.{{ adapter.quote(def_col.name) }}::numeric -- NOT to_numeric_or_null else No function matches the given name and argument types.
+        {% elif def_col.data_type == 'date' %}
+          {{ schema }}.to_date_or_null({{ source }}.{{ adapter.quote(def_col.name) }}::text, {% for fmt in date_formats %}'{{ fmt }}'::text{% if not loop.last %}, {% endif %}{% endfor %}) as {{ adapter.quote(def_col.name) }}
+        {% elif def_col.data_type == 'boolean' %}
+          {{ to_boolean_or_null(def_col.name, source) }} as {{ adapter.quote(def_col.name) }}
+          --{{ schema }}.to_boolean_or_null({{ source }}.{{ adapter.quote(def_col.name) }}) as {{ adapter.quote(def_col.name) }} -- ? allows for 'oui'
+          --{{ source }}.{{ adapter.quote(def_col.name) }}
+        {% elif def_col.is_string() %}
+          {{ source }}.{{ adapter.quote(def_col.name) }}::text -- in case it's NOT text ex. int4 because of dbt seed !
         {% else %}
-          {{ source }}.{{ adapter.quote(col.name) }}::text
+          {{ source }}.{{ adapter.quote(def_col.name) }}::text
+        {% endif %}
+
         {% endif %}
         {% if not loop.last %},{% endif %}
-        -- TODO NOT IGNORECASE
-        -- col.data_type : {{ col.data_type }} ; col.name :  {{ col.name }} ; test : {{ modules.re.match("geo.*", col.name, modules.re.IGNORECASE) }}
     {% endfor %}
     --, '{ "a":1, "b":"zz" }'::json as test
     from {{ source }}
