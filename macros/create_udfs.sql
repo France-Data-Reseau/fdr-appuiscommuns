@@ -81,7 +81,7 @@ begin
 exception
   when others then
   begin
-    return case trim(s::text) when 'oui' then true else false end; -- trim accepts null
+    return case lower(trim(s::text)) when 'oui' or 'yes' then true else false end; -- trim accepts null
   exception
     when others then return null;
   end;
