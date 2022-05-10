@@ -1,0 +1,4 @@
+apcomoc_src_name,apcomoc_src_id,apcomoc_IdOccupation,apcomoc_RefEquipement,apcomoc_Gestionnaire,apcomoc_Technologie,apcomoc_Reseau
+appuiscommuns_occupation__example,apcomocex1,9e90dfdd-f3b2-5c84-a378-3a0fa12d0110,9e90dfdd-f3b2-5c84-a378-3a0fa12d0100,Orange,FIBRE,CT
+appuiscommuns_occupation__example,apcomocex2,9e90dfdd-f3b2-5c84-a378-3a0fa12d0120,9e90dfdd-f3b2-5c84-a378-3a0fa12d0200,Orange,CUIVRE,CT
+appuiscommuns_occupation__example,apcomocex3,9e90dfdd-f3b2-5c84-a378-3a0fa12d1220,9e90dfdd-f3b2-5c84-a378-3a0fa12d1200,Orange,FIBRE,CT

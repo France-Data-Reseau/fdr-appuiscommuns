@@ -1,4 +1,7 @@
 {#
+
+TODO WRONG REPLACE
+
 Parsing of a priori (made-up), covering examples of the definition / interface.
 Examples have to be **as representative** of all possible data as possible because they are also the basis of the definition.
 For instance, for a commune INSEE id field, they should also include a non-integer value such as 2A035 (Belvédère-Campomoro).
@@ -18,19 +21,7 @@ TODO can't be replaced by from_csv because is the actual definition, BUT could b
   )
 }}
 
-{% set containerUrl = 'http://' + 'datalake.francedatareseau.fr' %}
-{% set typeUrlPrefix = containerUrl + '/dc/type/' %}
-{% set type = 'appuiscommuns_supportaerien_osmgeodatamine_powersupports_extract' %} -- spécifique à la source ; _2021 ? from this file ? prefix:typeName ?
-{% set type = 'appuiscommuns_supportaerien' %} -- _2021 ? from this file ? prefix:typeName ?
-{% set ns = 'supportaerien.appuiscommuns.francedatareseau.fr' %} -- ?
-{% set typeName = 'SupportAerien' %}
-{% set sourcePrefix = 'osmpowersupports' %} -- ?
-{% set prefix = 'appuiscommunssupp' %} -- ?
-{% set sourceFieldPrefix = sourcePrefix + ':' %}
-{% set sourceFieldPrefix = sourcePrefix + '__' %}
-{% set fieldPrefix = prefix + ':' %}
-{% set fieldPrefix = prefix + '__' %}
-{% set idUrlPrefix = typeUrlPrefix + type + '/' %}
+{% set fieldPrefix = 'apcomsup_' %}
 
 select
     {{ dbt_utils.star(ref('appuiscommuns_supportaerien__example'),

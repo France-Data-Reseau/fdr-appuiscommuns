@@ -1,73 +1,81 @@
 {#
 Unification des données normalisées de toutes les sources de type appuiscommuns.supportaerien
-#}
 
-{% set containerUrl = 'http://' + 'datalake.francedatareseau.fr' %}
-{% set typeUrlPrefix = containerUrl + '/dc/type/' %}
-{% set type = 'appuiscommuns_supportaerien' %} -- _2021 ? from this file ? prefix:typeName ?
-{% set typeName = 'SupportAerien' %}
-{% set prefix = 'appuiscommunssupp' %} -- ?
-{% set fieldPrefix = prefix + ':' %}
-{% set fieldPrefix = prefix + '__' %}
-{% set idUrlPrefix = typeUrlPrefix + type + '/' %}
+60s
 
-{#
 Union using dbt_utils helper :
 - _definition (with 0 data lines) as the first unioned relation adds even fields missing in all normalizations, with the right type,
 if they are provided in the official type definition
 - include=dbt_utils.star(_definition) excludes source-specific fields
 - column_override={"geometry": "geometry"} is required else syntax error : cast("geometry" as USER-DEFINED) as "geo...
 see https://github.com/dbt-labs/dbt-utils#union_relations-source
-- source_column_name="_dbt_source_relation"
+- source_column_name : apcomsup_src_relation and not default _dbt_source_relation to avoid conflicts in joins
+(TODO Q vs apcomsup_src_name would ?)
 - 
 
-is a table only if has reconciliation
-    include=dbt_utils.star(ref('appuiscommuns_supportaerien__definition')),
+is a table only if has reconciliation or dedup between sources
+    TODO include=dbt_utils.star(ref('appuiscommuns_supportaerien__definition')),
 #}
+
+{% set fieldPrefix = 'apcomsup' + '_' %}
+{% set order_by_fields = [fieldPrefix + 'src_priority', fieldPrefix + 'src_id'] %} -- must include dedup relevancy order
 
 {{
   config(
-    materialized="table"
+    materialized="table",
+    indexes=[{'columns': ['"' + fieldPrefix + 'Id"']},
+      {'columns': order_by_fields},
+      {'columns': ['geometry'], 'type': 'gist'},
+      {'columns': ['geometry_2154'], 'type': 'gist'},]
   )
 }}
 
 
-with all1 as (
+with unioned as (
 
 {{ dbt_utils.union_relations(relations=[
       ref('appuiscommuns_supportaerien__definition'),
-      ref('megalis__apcom_supportaerien'),
+      ref('osm_powsupp__appuiscommuns_supportaerien'),
       ref('birdz__apcom_supportaerien'),
-      ref('osm_powsupp__appuiscommuns_supportaerien')],
-    column_override={"geometry": "geometry"})
+      ref('megalis__apcom_supportaerien')],
+    source_column_name='apcomsup_src_relation',
+    column_override={"geometry": "geometry", "geometry_2154": "geometry"})
 }}
 
 {#
 14s without commune_linked
 ), geometry_deduped as (
     -- geometry deduplication :
-    -- deduplication could 
+    -- NOT HERE, REQUIRES MOSTLY NEAR RATHER THAN EXACT GEO DEDUPLICATION AMONG DIFFERENT SOURCCES
     -- FOR MORE PERFORMANCE, REQUIRES PRIMARY KEY ON ID AND A TABLE SO NOT ON SOURCE
     -- OK : 44s rather than 0,44 if on 1m lines rather than the 200 lines, even on translation view (or source view)
-    {{ dedupe('all1', id_fields=['"geometry"']) }}
+    {{ dedupe('unioned', id_fields=['"geometry"']) }}
     
 #}
-{# TODO rather n-n relaationship
+{#
+commune linking :
+done outside, because n-n relationship linking produces another table
+and 1-n linking is kept for example and reuses this model
 NB. way too long without table materialization and indexing
-#}
 ), commune_linked as (
     -- reconciliation :
     -- NB. reconciliation to communes requires a geometry field, so can't be done on the source (and is more efficient being in a table)
     -- moreover, commune is not necessary for other translation handlings (dedup...). And doing it after translation allows to do it all in one go.
-    {%- set fields = ['_dbt_source_relation'] + adapter.get_columns_in_relation(ref('appuiscommuns_supportaerien__definition')) | map(attribute="name") | list -%}-- BEWARE without | list it stays a generator that can only be iterated once
-    {#% set cols = dbt_utils.star(sourceModel, except=[
-          fieldPrefix + "fdrcommune__insee_id",
-          fieldPrefix + "commune__insee_id",
-          "fdrcommune__insee_id"]).split(',') %#}
-    {{ apcom_supportaerien_translation__link_geometry_fdrcommune("all1", id_field="appuiscommunssupp__Id", fields=fields) }}
+    -- TODO remove
+    {%- set fields = ['_dbt_source_relation', 'appuiscommunssupp__src_priority'] + adapter.get_columns_in_relation(ref('appuiscommuns_supportaerien__definition')) | map(attribute="name") | list -%}-- BEWARE without | list it stays a generator that can only be iterated once
+    -- (no need to except=[apcomsup_com_code"] because in the ex. osm source it is osmposup_com_code)
+    {#% set cols = dbt_utils.star(sourceModel).split(',') %# OLD}
+    {{ apcom_supportaerien_translation__link_geometry_fdrcommune("unioned", id_field="apcomsup_Id", fields=fields) }}
+
+#}
 )
 
-select * from commune_linked
+select *,
+ST_Transform(geometry, 2154) as geometry_2154
+from unioned
+-- TOO LONG same order by as for _deduped :
+--order by apcomsup_src_priority asc, apcomsup_src_id asc
+order by "{{ order_by_fields | join('" asc, "') }}" asc
 
 
 {#

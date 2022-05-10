@@ -1,0 +1,5 @@
+apcomeq_src_name,apcomeq_src_id,apcomeq_IdEquipement,apcomeq_RefSupportAerien,apcomeq_Hauteur,apcomeq_Proprietaire,apcomeq_Gestionnaire,apcomeq_Nature,apcomeq_NatureTraverse
+appuiscommuns_equipement__example,apcomeqex1,9e90dfdd-f3b2-5c84-a378-3a0fa12d0100,05841472-1d3c-5126-bd6f-c02cef2e8fc0,8.5,Orange,Orange,Traverse,15_trous
+appuiscommuns_equipement__example,apcomeqex2,9e90dfdd-f3b2-5c84-a378-3a0fa12d0200,05841472-1d3c-5126-bd6f-c02cef2e8fc0,7.5,Orange,Orange,Traverse,15_trous
+appuiscommuns_equipement__example,apcomeqex3,9e90dfdd-f3b2-5c84-a378-3a0fa12d1100,d09982ec-46a0-5a72-a7da-27076e7cb445,6.5,Orange,Orange,?,
+appuiscommuns_equipement__example,apcomeqex4,9e90dfdd-f3b2-5c84-a378-3a0fa12d1200,d09982ec-46a0-5a72-a7da-27076e7cb445,7.5,Orange,Orange,Traverse,15_trous

@@ -9,19 +9,8 @@ to compute Nature from Materiau
 
 {% macro apcom_supportaerien_translation__computed(translated_source_model_name, mapping_model_suffix="") %}
 
-{% set containerUrl = 'http://' + 'datalake.francedatareseau.fr' %}
-{% set typeUrlPrefix = containerUrl + '/dc/type/' %}
-{% set type = 'appuiscommuns_supportaerien_osmgeodatamine_powersupports_extract' %} -- spécifique à la source ; _2021 ? from this file ? prefix:typeName ?
-{% set type = 'appuiscommuns_supportaerien' %} -- _2021 ? from this file ? prefix:typeName ?
-{% set ns = 'supportaerien.appuiscommuns.francedatareseau.fr' %} -- ?
-{% set typeName = 'SupportAerien' %}
-{% set sourcePrefix = 'osmpowersupports' %} -- ?
-{% set prefix = 'appuiscommunssupp' %} -- ?+
-{% set sourceFieldPrefix = sourcePrefix + ':' %}
-{% set sourceFieldPrefix = sourcePrefix + '__' %}
-{% set fieldPrefix = prefix + ':' %}
-{% set fieldPrefix = prefix + '__' %}
-{% set idUrlPrefix = typeUrlPrefix + type + '/' %}
+{% set sourceFieldPrefix = 'osmposup_' %}
+{% set fieldPrefix = 'apcomsup_' %}
 
     -- simple join-less enrichment that does not hamper performance vs using the materialized table directly
     select
@@ -29,6 +18,7 @@ to compute Nature from Materiau
           fieldPrefix + "TypePhysique",
           fieldPrefix + "Nature"]) }#}
         {{ translated_source_model_name }}.*,
+        --ST_Transform(geometry, 2154) as geometry_2154, -- Lambert 93 RATHER in union
         'APPUI' as "{{ fieldPrefix }}TypePhysique", -- toujours dans le cas d'usage (OSM : toujours pole ou tower)
         nature."Valeur" as "{{ fieldPrefix }}Nature" -- 'POTEAU BOIS'
         

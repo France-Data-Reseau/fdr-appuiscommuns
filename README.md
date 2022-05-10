@@ -2,9 +2,61 @@
 
 Ce projet dbt (Data Build Tool) est théoriquement consacré au cas d'usage Appuis Communs, dans le cadre de l'initiative France Data Réseau. Toutefois, il contient pour l'instant aussi la transformation des données de la source publique OSM Geodatamine power supports (de type URL CSV) indiquée par le partenaire expert et "data steward" Datactivist vers le modèle normalisé de ce cas d'usage, au lieu d'être dans un projet dbt dédié tel fdr_appuiscommuns_osm(powersupports).
 
+Qs fct :
+pb dedup
+revoir avec François tous les préfixes ! (apcom, type, source / type...).
+- apcomeq_IdEquipement => apcomeq_Id ?
+l_appuisaeriens_equipementS ?
+fct :
+segment "occupant télécoms, technologie et cheminement" ?? et cheminement ?
+Suivi des typologies conventionnelles - "conventions" : quel champ ?
+
+TODO :
+- comment gérer des données imparfaites :
+  - (fournir tableschema et y inciter)
+  - OPTION pour chaque type de chaque type de source, définir des tests de contrainte de schéma ; les faire exécuter, remonter rapport et résultats
+  - TODO que sur les données où les tests sont OK : analyser les résultats (json ?) pour en tirer le bon filtre de la liste des ressources prise de CKAN
+  - normalisation qui par de et accepte des valeurs texte : OK sauf TODO seeds pour tests
+- Lambert 93 : la plateforme stocke en 4326 WGS84, et peut fournir la projection Lambert 93 par conversion. Lambert 93 est une projection, donc imparfaite, et erronée en dehors de la métropole.
+- reste : apcomindoc source_suffix & apcomeq+ native source union, renommer .sql+
+- dedup :
+  - methodo : within source first otherwise too long
+  - pb dedup : osm prio pourquoi ? parce que le uuid à garder est plutôt ceux des sources pour que les apcomeq les référence ! sinon les mettre à jour où multiple ids à la elastic "fusion" mais requiert array operators : https://stackoverflow.com/questions/4058731/can-postgresql-index-array-columns
+- best practices : keep comments mostly in SQL (useful in compiled/ to debug, no problems with), DBT code that is
+- debug : faire printer les infos de debug par dbt dans des commentaires SQL ! DOES NOT WORK IN MACROS
+- methodo perfs : 1. écrire en SQL simple et efficace et tout "table" materialized, 2. si pas perf exécuter la première partie du "with" seulement (en commentant le reste) et si pas performant comprendre pourquoi avec explain (dans ex. psql ou dbeaver) et poser les index nécessaires ou changer le code, 3. tant que l'ensemble n'est pas performant faire pareil avec chaque partie suivante du with
+- dedup custom source order (osm best) & perfs, then export as example & better example mechanism, then ocind pivotS and region, then macro
+- exploitation :
+  - unifier préfixes : type : apcom_supportaerien_etape (version de stockage (test) / étape du traitement) ; champ : apcomsup_champ (Id, IdSupportAerien ?), apcomsup_com_code ; dbt test bonnes pratiques de nommage !
+  - segmenté : par matériau ; exploitant électrique ; occupant télécoms, technologie et cheminement
+  - jointure d'un meilleur enriched avec reg_code/nom (extrait de cet utilisation !) pour décliner par commune et AODE (apcomoc__Gestionnaire ?) (en plus de total), en mutualisant avant group by
+  - permettre pas que des exemples, donc aussi unification des apcom* autres que supportaerien
+  - Projection des échéances de fin d'occupation, Suivi des typologies conventionnelles
+- ::date => timestamp !! https://stackoverflow.com/questions/14113469/generating-time-series-between-two-dates-in-postgresql
+- !!! pour arriver à livrer quelque chose, réaliser les exemples et partir d'eux !!
+- id : _test pas schema mais models sur ce qui est à tester (tests davantage unitaires)
+- pass data to dbt : run-operation --args '{my_variable: my_value}'
+- LATER show test results (state, report, bad data) : logs as json, target/run(_results)... https://stackoverflow.com/questions/61238395/can-the-results-of-dbt-test-be-converted-to-report
+- better _computed macro ? or none ?
+- OUI TODO def aussi pour chaque source car requis pour leur union si elles n'ont pas tous les champs OU sens inverse au-dessus de _translatedS macrotés ? ; LATER def de yaml, guidant aussi to/from_csv ?
+- utilise Lambert 93 pour le calcul en m ? stocké aussi / instead ?
+- notion de order by field
+- TODO TODO how to share schema constraint tests ? & refactor (one yml per source folder ?)
+- périmètres :
+ - trouver et télécharger des fichiers geojson (ou quelconques), et les unifier en CSV ou import direct en base, avec index geo (requis ?)
+ - s'en servir pour filtrer les données non de collectivités, notamment apcom OSM, et ainsi éviter des pbs de nettoyage et de performance
+- uniformiser et universaliser les champs géo : x/y, geo_point/shape_4326, geo_point/shape_json ; enlever les champs d'entrée s'ils ne correspondent pas ex. ODS région point sans POINT
+- re generate .csv seeds column types as text (sinon sujet à erreurs y compris de dbt ex.  3_2 => 32 int, facile à retyper ::int, permet nettoyage par règles), dans seeds.yml séparé avec tags déplacés dans models.yml (car erreur dbt found two schema.yml entries for the same resource), déjà surtyper dans tous les _translated, documenter la bonne pratique. En même temps que to/from ckan. TODO issue, idée *:text
+- DONE (birdz...) uni* sources (.csv)_stg ; from_csv guidé par métamodèle
+- DONE remplacer _extract par example dont vars proj yml, en même temps que dedup
+- communes n-n, link macro générique, dedup <20m OK reste : TODO
+- remonter dedup etc. en générique, en revalidant voire automatisant la conf perfs index, _translated.SQL with index
+- object created or file created or meta from ckan
+
 TODOs : descendre, union+ MAIS ET dedup12 (INDEX GEO REQUIS ET INCREMENTAL), réconciliation (nécessairement après normalization ; comme test relationship serait utile de mutualiser entre sources impls donc après union, MAIS si des champs source specific y aident il faut le faire avant en source specific, en étage précablé i.e macro séparée(s pour pouvoir ne remplacer que l'une ?!) ?), emental+, --target final, IRVE, OK _ot(w) ; vars, macroter pour sources ; birdz, refactoring... en fond : incremental (if incremental where updated >), snapshot (SCD2 : rajoute colonnes dbt_valid_from  dbt_valid_to MAIS pas trop en Open Data ; sinon publier par vue liant vers concretS, qui / selon indicateurs voire alertes, lançables depuis Jenkins ?)
 
 TODO bouger :
+
 idée : faciliter avec une partie des données (var en LIMIT)
 https://github.com/dbt-labs/dbt-core/issues/401 https://github.com/dbt-labs/dbt-core/issues/1059
 open data "pourri"
@@ -212,9 +264,14 @@ Gotchas - DBT :
 Gotchas - Jinja2 :
 - doc https://jinja.palletsprojects.com/en/3.0.x/templates
 - map() filter returns string "<generator object do_map at 0x10bd730>" => add |list https://github.com/pallets/jinja/issues/288
+- change the value of a variable : not possible (and not in the spirit). But if really required, use a dict:  https://stackoverflow.com/questions/9486393/jinja2-change-the-value-of-a-variable-inside-a-loop
 
 Gotchas - DBeaver :
 - big query (with WITH statement...) throws error : DBeaver uses ";" character AND empty lines as statements separator, so remove these first https://dbeaver.io/forum/viewtopic.php?f=2&t=1687
+
+Gotchas - PostgreSQL :
+- HINT:  No function matches the given name and argument types. => add explicit type casts to the arguments
+- FAQ postgres blocks & logs says WARNING:  there is already a transaction in progress => terminate all running queries : SELECT pg_cancel_backend(pid) FROM pg_stat_activity WHERE state = 'active' and pid <> pg_backend_pid(); 
 
 
 

@@ -1,5 +1,5 @@
-Valeur,Alias,Définition
-bois,,"Appuis bois, créosoté ou non beton ​ Appuis en béton armé acier Galva Appuis en acier galvanisé epoxy Composite Appuis dit ""composite"", résine époxy sur toile de fibre de verre"
-beton,,Appuis en béton armé
-acier,Galva,Appuis en acier galvanisé
-epoxy,Composite,"Appuis dit ""composite"", résine époxy sur toile de fibre de verre"
+Valeur,Alias,Définition,birdzsup_TYPE_SUPPO
+bois,,"Appuis bois, créosoté ou non beton ​ Appuis en béton armé acier Galva Appuis en acier galvanisé epoxy Composite Appuis dit ""composite"", résine époxy sur toile de fibre de verre",
+beton,,Appuis en béton armé,POTEAU ELECTRIQUE BETON
+acier,Galva,Appuis en acier galvanisé,
+epoxy,Composite,"Appuis dit ""composite"", résine époxy sur toile de fibre de verre",

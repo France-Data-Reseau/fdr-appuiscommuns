@@ -24,7 +24,9 @@ Only the first column with a given name is kept?
 optional_column_model_TODO_or_types
 #}
 
-{% macro from_csv(source, column_models=none, complete_columns_with_null=false, wkt_rather_than_geosjon=false, date_formats=['YYYY-MM-DDTHH24:mi:ss.SSS', 'YYYY/MM/DD HH24:mi:ss.SSS', 'DD/MM/YYYY HH24:mi:ss.SSS']) %}
+{% macro from_csv(source, column_models=none, complete_columns_with_null=false, wkt_rather_than_geosjon=false,
+    date_formats=['YYYY-MM-DDTHH24:mi:ss.SSS', 'YYYY/MM/DD HH24:mi:ss.SSS', 'DD/MM/YYYY HH24:mi:ss.SSS'],
+    geo_pattern="geo.*", uuid_pattern="_Id|_Ref") %}
 
 {%- set cols = adapter.get_columns_in_relation(source) | list -%}
 {%- set col_names = cols | map(attribute='name') | list -%}
@@ -56,7 +58,7 @@ select
 
         -- def_col.data_type : {{ def_col.data_type }} ; def_col.name :  {{ def_col.name }} ; test : {{ modules.re.match("geo.*", def_col.name, modules.re.IGNORECASE) }}
 
-        {% if modules.re.match("geo.*", def_col.name, modules.re.IGNORECASE) %}
+        {% if modules.re.match(geo_pattern, def_col.name, modules.re.IGNORECASE) %}
           {# TODO NOT IGNORECASE #}
           {% if not wkt_rather_than_geosjon %}
           ST_Transform(ST_GeomFromGeoJSON({{ source }}.{{ adapter.quote(def_col.name) }}), 4326) as {{ adapter.quote(def_col.name) }}
@@ -67,7 +69,7 @@ select
         {# TODO from json : according to param, example data, meta ?
         {% elif def_col.data_type == 'ARRAY' %}
           array_to_json({{ source }}.{{ adapter.quote(def_col.name) }}) as {{ adapter.quote(def_col.name) } #}
-        {% elif modules.re.match(".*__Id", def_col.name) %}
+        {% elif modules.re.match(uuid_pattern, def_col.name) %}
           {{ source }}.{{ adapter.quote(def_col.name) }}::uuid
         {% elif def_col.is_number() %}
           {{ to_numeric_or_null(def_col.name, source) }} as {{ adapter.quote(def_col.name) }}

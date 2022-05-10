@@ -11,34 +11,26 @@ parameters :
 - normalized_source_model_name
 - id_field : used as the id of a merge line, by which the merging "group by" is done.
 TODO id_field. Can be order_by_fields if they are unique.
-- order_by_fields : the DESC ordering, to ensure not to have duplicate matches,
+- order_by_fields : the ASC ordering, to ensure not to have duplicate matches,
 then of merge resolution
 - fields : to merge across matched duplicates and include in the final product
 - criteria : SQL criteria that defines the duplicate matches
 - TODO debug fields (geometry...) : to pass along
 #}
 
-{% macro apcom_supportaerien_translation__dup_geometry(normalized_source_model_name, id_field, order_by_fields, fields, criteria) %}
+-- TODO apcom_supportaerien_translation__dup_geometry : first step producing only duplicates,
+-- that can be merged according to the expert choices afterwards (rather than static rules)
+{% macro apcom_supportaerien_translation__dedupe_geometry(normalized_source_model_name, id_field, order_by_fields, fields, criteria) %}
 
-{% set containerUrl = 'http://' + 'datalake.francedatareseau.fr' %}
-{% set typeUrlPrefix = containerUrl + '/dc/type/' %}
-{% set type = 'appuiscommuns_supportaerien_osmgeodatamine_powersupports_extract' %} -- spécifique à la source ; _2021 ? from this file ? prefix:typeName ?
-{% set type = 'appuiscommuns_supportaerien' %} -- _2021 ? from this file ? prefix:typeName ?
-{% set ns = 'supportaerien.appuiscommuns.francedatareseau.fr' %} -- ?
-{% set typeName = 'SupportAerien' %}
-{% set sourcePrefix = 'osmpowersupports' %} -- ?
-{% set prefix = 'appuiscommunssupp' %} -- ?+
-{% set sourceFieldPrefix = sourcePrefix + ':' %}
-{% set sourceFieldPrefix = sourcePrefix + '__' %}
-{% set fieldPrefix = prefix + ':' %}
-{% set fieldPrefix = prefix + '__' %}
-{% set idUrlPrefix = typeUrlPrefix + type + '/' %}
+{% set fieldPrefix = 'apcomsup_' %} -- for debug purpose only
 
 {% set id_fields = [id_field] %}
 {# % set order_by_fields = [src_name_field, src_id_field] % #}
 {% set id_and_order_by_fields = id_fields + order_by_fields %}
 
 {% set pair_order_fields = [] %}
+
+-- apcom_supportaerien_translation__dup_geometry :
 
 with link_candidates as (
     -- 1. Let's match data with itself and build the pairs where the criteria is met,
@@ -60,7 +52,9 @@ with link_candidates as (
 
         , earlier.geometry as earlier_geometry, later.geometry as later_geometry -- for debugging purpose
     FROM {{ ref(normalized_source_model_name) }} earlier, {{ ref(normalized_source_model_name) }} later
-    WHERE -- only list pairs whose right / later side is after its left / earlier side
+    WHERE
+    -- preference of data among lines (which is earliest in "earlier" / left side), according to order_by :
+    -- only list pairs whose right / later side is after its left / earlier side
     -- (in this ordering, the first left / earlier one may match all right / later ones,
     -- then the second one may match all right / later ones except the first one (so all next ones)...)
     (
@@ -83,15 +77,15 @@ with link_candidates as (
     --and ST_DWithin(way, ST_Transform(later.geometry, 3857),
     ORDER BY
     {% for order_by_field in order_by_fields %}
-      "earlier{{ order_by_field }}" desc,
+      "earlier{{ order_by_field }}" asc,
       -- {{ pair_order_fields.append("earlier" ~ order_by_field) }}
     {% endfor %}
     {% for order_by_field in order_by_fields %}
-      "later{{ order_by_field }}" desc {% if not loop.last%},{% endif %}
+      "later{{ order_by_field }}" asc {% if not loop.last%},{% endif %}
       -- {{ pair_order_fields.append("later" ~ order_by_field) }}
     {% endfor %}
-    ---- earlier."{{ src_name_field }}" desc, earlier."{{ src_id_field }}" desc,
-    ---- later."{{ src_name_field }}" desc, later."{{ src_id_field }}" desc
+    ---- earlier."{{ src_name_field }}" asc, earlier."{{ src_id_field }}" asc,
+    ---- later."{{ src_name_field }}" asc, later."{{ src_id_field }}" asc
 
 ), filtered as (
 
@@ -139,15 +133,14 @@ with link_candidates as (
   union
   select * from filtered
   ) fp
-  -- order of preference of data among lines :
   order by
     {% for order_by_field in order_by_fields %}
-      "earlier{{ order_by_field }}" desc,
+      "earlier{{ order_by_field }}" asc,
     {% endfor %}
     {% for order_by_field in order_by_fields %}
-      "later{{ order_by_field }}" desc {% if not loop.last%},{% endif %}
+      "later{{ order_by_field }}" asc {% if not loop.last%},{% endif %}
     {% endfor %}
-  ---- "earlier{{ src_name_field }}" desc, "earlier{{ src_id_field }}" desc, "later{{ src_name_field }}" desc, "later{{ src_id_field }}" desc
+  ---- "earlier{{ src_name_field }}" asc, "earlier{{ src_id_field }}" asc, "later{{ src_name_field }}" asc, "later{{ src_id_field }}" asc
 
   -- "{{ fieldPrefix }}src_name", "{{ fieldPrefix }}src_id"
   --{% for order_by_field in order_by_fields %}
@@ -167,7 +160,8 @@ with link_candidates as (
 
 ), merged as (
 
-   {% set earlier_order_by = '"earlier' + '" DESC, "earlier'.join(order_by_fields) + '" DESC' %} -- "earlier{{ src_name_field }}" DESC, "earlier{{ src_id_field }}" DESC
+   {# order of merge (only) of values (within already chosen merged_ids) : #}
+   {% set earlier_order_by = '"earlier' + '" asc, "earlier'.join(order_by_fields) + '" asc' %} -- "earlier{{ src_name_field }}" asc, "earlier{{ src_id_field }}" asc
 
   -- TODO and "updated" or row_count() for ORDER BY LIMIT 1 ? LATER macro & FILTER NOT NULL http///
   select
@@ -179,7 +173,7 @@ with link_candidates as (
       {% endfor %}
       --filtered_plus.*,--"{{ id_field }}",
       -- debug :
-      --(ARRAY_AGG("fdrcommune__insee_id") FILTER (WHERE "fdrcommune__insee_id" IS NOT NULL order by "updated" desc limit 1))[1] as "fdrcommune__insee_id",
+      --(ARRAY_AGG("fdrcommune__insee_id") FILTER (WHERE "fdrcommune__insee_id" IS NOT NULL order by "updated" asc limit 1))[1] as "fdrcommune__insee_id",
       -- see : https://stackoverflow.com/questions/61874745/postgresql-get-first-non-null-value-per-group
       -- https://github.com/dbt-labs/dbt-utils/issues/335 https://github.com/dbt-labs/dbt-utils/pull/29
       (ARRAY_AGG(filtered_plus."later{{ id_field }}" ORDER BY {{ earlier_order_by }}) FILTER (WHERE filtered_plus."later{{ id_field }}" <> filtered_plus."earlier{{ id_field }}")) as "merged_ids",
@@ -207,9 +201,9 @@ with link_candidates as (
 
 select * from all_merged
   order by
-    ---- all_merged."{{ src_name_field }}" desc, all_merged."{{ src_id_field }}" desc
+    ---- all_merged."{{ src_name_field }}" asc, all_merged."{{ src_id_field }}" asc
     {% for order_by_field in order_by_fields %}
-      "{{ order_by_field }}" desc {% if not loop.last%},{% endif %}
+      "{{ order_by_field }}" asc {% if not loop.last%},{% endif %}
     {% endfor %}
   --{% for order_by_field in order_by_fields %}
   --all_merged.{{ adapter.quote(order_by_field) }} {% if not loop.last %},{% endif %}

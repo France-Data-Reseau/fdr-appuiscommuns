@@ -6,7 +6,7 @@ Partie spécifique à la source
 - OU à chaque fois pour plus de concision et lisibilité select * (les champs en trop sont alors enlevés à la fin par la __definition) ?
 #}
 
-{% macro gthdv2__apcom_supportaerien(sourceModel) %}
+{% macro gthdv2__apcom_supportaerien(sourceModel, src_priority=None) %}
 
 {% set containerUrl = 'http://' + 'datalake.francedatareseau.fr' %}
 {% set typeUrlPrefix = containerUrl + '/dc/type/' %}
@@ -15,11 +15,11 @@ Partie spécifique à la source
 {% set ns = 'supportaerien.appuiscommuns.francedatareseau.fr' %} -- ?
 {% set typeName = 'SupportAerien' %}
 {% set sourcePrefix = 'gthdv2' %} -- ?
-{% set prefix = 'appuiscommunssupp' %} -- ?
+{% set prefix = 'apcomsup' %} -- ?
 {% set sourceFieldPrefix = sourcePrefix + ':' %}
-{% set sourceFieldPrefix = sourcePrefix + '__' %}
+{% set sourceFieldPrefix = sourcePrefix + '_' %}
 {% set fieldPrefix = prefix + ':' %}
-{% set fieldPrefix = prefix + '__' %}
+{% set fieldPrefix = prefix + '_' %}
 {% set idUrlPrefix = typeUrlPrefix + type + '/' %}
 
 with source as (
@@ -123,11 +123,8 @@ renamed as (
         "nd_abddate,D"::text as "{{ sourceFieldPrefix }}nd_abddate__s", -- Date d'abandon (fin de validité) de l'objet dans le S.I.
         "nd_abdsrc,C,254"::text as "{{ sourceFieldPrefix }}nd_abdsrc", -- Motif de l'abandon de l'objet
 
-        {{ schema }}.to_text_or_null(split_part("nd_voie,C,254"::text, '/'::text, 1)) as "{{ fieldPrefix }}commune_insee_id", -- sert à enriched qui est indépendant de la source, donc sourceFieldPrefix ne suffirait pas ; alternative plus précise
-        {{ schema }}.to_text_or_null(split_part("nd_voie,C,254"::text, '/'::text, 1)) as "fdrcommune__insee_id", -- alternative plus facile à réconcilier
-        {{ schema }}.to_text_or_null(split_part("nd_voie,C,254"::text, '/'::text, 1)) as "{{ fieldPrefix }}fdrcommune__insee_id", -- TODO OU les deux OUI (comme un chemin)
-        {{ schema }}.to_text_or_null(split_part("nd_voie,C,254"::text, '/'::text, 2)) as "{{ fieldPrefix }}commune_nom", --  enrichissement mminimal pour rendre code insee lisible ?
-        {{ schema }}.to_text_or_null(split_part("nd_voie,C,254"::text, '/'::text, 2)) as "{{ fieldPrefix }}fdrcommune__nom", --  TODO OU OUI (et le fait que insee_id est déjà un id / unique permettra de savoir qu'il n'y a pas besoin de nom pour réconcillier)
+        {{ schema }}.to_text_or_null(split_part("nd_voie,C,254"::text, '/'::text, 1)) as "{{ sourceFieldPrefix }}com_code", -- sert à enriched qui est indépendant de la source, donc sourceFieldPrefix ne suffirait pas ; alternative plus précise
+        {{ schema }}.to_text_or_null(split_part("nd_voie,C,254"::text, '/'::text, 2)) as "{{ sourceFieldPrefix }}com_name", --  enrichissement mminimal pour rendre code insee lisible ?
         {{ schema }}.to_text_or_null(split_part("nd_voie,C,254"::text, '/'::text, 3)) as "{{ sourceFieldPrefix }}rue",
         {{ schema }}.to_text_or_null(split_part("nd_voie,C,254"::text, '/'::text, 4)) as "{{ sourceFieldPrefix }}numero" -- ??
 
@@ -141,6 +138,7 @@ parsed as (
 
     select
         renamed.*,
+        {% if src_priority %}'{{ src_priority }}' || {% endif %}'{{ src_name }}' as "{{ fieldPrefix }}src_priority", -- source name (else won't have it anymore once unified with other sources)
         uuid_generate_v5(uuid_generate_v5(uuid_ns_dns(), '{{ ns }}'), "{{ fieldPrefix }}src_id") as "{{ fieldPrefix }}Id",
         -- TODO TODO Q geometry
         {{ schema }}.to_date_or_null("{{ sourceFieldPrefix }}DateConstruction__s", 'YYYY/MM/DD HH24:mi:ss.SSS'::text) as "{{ fieldPrefix }}DateConstruction",

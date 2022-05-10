@@ -1,4 +1,4 @@
-appuiscommunssupp__src_name,appuiscommunssupp__src_id,appuiscommunssupp__Id,geometry,appuiscommunssupp__TypePhysique,appuiscommunssupp__Nature,appuiscommunssupp__Gestionnaire,appuiscommunssupp__Materiau,appuiscommunssupp__HauteurAppui,appuiscommunssupp__CodeExterne,appuiscommunssupp__fdrcommune__insee_id,appuiscommunssupp__fdrcommune__nom,appuiscommunssupp__ClassePrecision
+apcomsup_src_name,apcomsup_src_id,apcomsup_Id,geometry,apcomsup_TypePhysique,apcomsup_Nature,apcomsup_Gestionnaire,apcomsup_Materiau,apcomsup_HauteurAppui,apcomsup_CodeExterne,apcomsup_com_code,apcomsup_com_name,apcomsup_ClassePrecision
 osmgeodatamine_powersupports_extract,node/8736382817,9e90dfdd-f3b2-5c84-a378-3a0fa12d9de1,"{""type"":""Point"",""coordinates"":[0.363591,47.4475859]}",APPUI,POTEAU BETON,Enedis,concrete,23,37081ER073,37081,Cléré-les-Pins,A
 undeduped_source,82837,,"{""type"":""Point"",""coordinates"":[0.373591,47.4475859]}",APPUI,POTEAU BETON,older overriden,concrete,,234,2A035,Belvédère-Campomoro,A
 undeduped_source,82837,,"{""type"":""Point"",""coordinates"":[0.383591,47.4475859]}",APPUI,POTEAU BETON,older overriden,concrete,23,234,2A035,Belvédère-Campomoro,A
