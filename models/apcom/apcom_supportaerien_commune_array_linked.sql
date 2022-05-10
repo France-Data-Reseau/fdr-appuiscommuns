@@ -24,7 +24,7 @@ apcomsup_fdrcom_insee_id__arr
   )
 }}
 
-{% set sourceModel = ref('appuiscommuns_supportaerien') %}
+{% set sourceModel = ref('apcom_supportaerien_unified') %}
 
 with apcomsup as (
     select * from {{ sourceModel }}

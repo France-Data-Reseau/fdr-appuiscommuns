@@ -25,6 +25,6 @@ TODO LATER copy / separate to _duplicate_geometry
 {% set criteria = "ST_Distance(ST_Transform(earlier.geometry, 3857), ST_Transform(later.geometry, 3857)) < " ~ distance_m ~ " -- s ; requires transform because 4326 distance is in degrees ; assuming geometry is not NULL" %}
 {% set criteria = "ST_DWithin(earlier.geometry_2154, later.geometry_2154, " ~ distance_m ~ ") -- 108s ; Lambert 93 BUT wrong ex. in DOM TOM " %}
 {% set criteria = "ST_DWithin(ST_Transform(earlier.geometry, 3857), ST_Transform(later.geometry, 3857), " ~ distance_m ~ ") -- 143s ; requires transform because 4326 distance is in degrees ; assuming geometry is not NULL" %}
-{{ apcom_supportaerien_translation__dedupe_geometry('appuiscommuns_supportaerien', fieldPrefix + "Id", [fieldPrefix + "src_priority"], fields, criteria) }}
+{{ apcom_supportaerien_translation__dedupe_geometry('apcom_supportaerien_unified', fieldPrefix + "Id", [fieldPrefix + "src_priority"], fields, criteria) }}
 -- TODO apcom_supportaerien_translation__dup_geometry : first step producing only duplicates,
 -- that can be merged according to the expert choices afterwards (rather than static rules)

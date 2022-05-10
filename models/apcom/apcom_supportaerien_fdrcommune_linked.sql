@@ -16,4 +16,4 @@ TODO from __deduped ?!
   )
 }}
 
-{{ apcom_supportaerien__2phase1link_fdrcommune_geometry(ref('appuiscommuns_supportaerien'), id_field=fieldPrefix + "Id") }}
+{{ apcom_supportaerien__2phase1link_fdrcommune_geometry(ref('apcom_supportaerien_unified'), id_field=fieldPrefix + "Id") }}

@@ -36,7 +36,7 @@ models:
     config:
       tags: ['normalization', 'transformation'] # 'pii' TODO generate from source__type.sql (and rename it)
       meta: { "type" : "supportaerien" } # TODO definition: _definition ou de type ou invt., source/in: osm_
-  - name: appuiscommuns_supportaerien
+  - name: apcom_supportaerien_unified
     description: l'union des supportaerien des toutes les sources
     config:
       tags: ['unification'] # 'pii' TODO generate from source__type.sql (and rename it)
