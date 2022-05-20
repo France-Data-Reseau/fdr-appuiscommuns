@@ -7,4 +7,11 @@ sources:
     #meta: {<dictionary>}
     #tags: [<string>]
     tables:
-      - name: "osmgeodatamine_powersupports" # "Supports aériens OpenStreetMap" ; TODO rather a view union of all name-matching tables / views, themselves TODO _ckan
+      - name: "apcom_osm_supportaerien_src" # "Supports aériens OpenStreetMap" ; TODO change, rather a view union of all name-matching tables / views, themselves TODO _ckan
+      - name: "apcom_def_supportaerien_src"
+      - name: "apcom_osm_supportaerien_src"
+      - name: "apcom_birdz_supportaerien_src"
+      - name: "apcom_aat_gthdv2_supportaerien_src"
+      - name: "apcom_def_equipement_src"
+      - name: "apcom_def_occupation_src"
+      - name: "apcom_def_suivioccupation_src"

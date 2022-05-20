@@ -77,11 +77,11 @@ translated as (
 
     select
         parsed.*,
-        {{ ref('l_appuisaeriens_materiau__osmgeodatamine') }}."Valeur" as "{{ fieldPrefix }}Materiau" -- TODO dict conv
+        mat."Valeur" as "{{ fieldPrefix }}Materiau" -- TODO dict conv
 
     from parsed
-        left join {{ ref('l_appuisaeriens_materiau__osmgeodatamine') }} -- LEFT join sinon seulement les lignes qui ont une valeur !! TODO indicateur count pour le vérifier
-            on parsed.{{ sourceFieldPrefix }}material = {{ ref('l_appuisaeriens_materiau__osmgeodatamine') }}.{{ sourceFieldPrefix }}material
+        left join {{ ref('l_appuisaeriens_materiau_osmgeodatamine') }} mat -- LEFT join sinon seulement les lignes qui ont une valeur !! TODO indicateur count pour le vérifier
+            on parsed.{{ sourceFieldPrefix }}material = mat.{{ sourceFieldPrefix }}material
             
     
 )

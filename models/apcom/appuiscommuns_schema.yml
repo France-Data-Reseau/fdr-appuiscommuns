@@ -4,7 +4,7 @@ version: 2
 
 # tests génériques de contrainte de schéma pour le modèle de données du cas d'usage "appuis communs"
 models:
-  - name: megalis__apcom_supportaerien__expected_stg
+  - name: apcom_aat_gthdv2_supportaerien_expected_stg
     description: "test unitaire en --target test de transformation (normalisation) : attendu préparé portant la définition du test unitaire et permettant de la désactiver"
     # (sinon laisser le test mais le comparer avec le même plutôt que le réel, mais ça laisse un test dépourvu de sens)
     config:
@@ -12,8 +12,8 @@ models:
       enabled: "{{ target.name == 'test' }}"
     tests:
       - dbt_utils.equality:
-          compare_model: ref('megalis__apcom_supportaerien') # TODO sur exemple démarqué, une fois --target fini ; PAS directement __expected pour gérer le parsing nécessaire (uuid... ; le même code sert à charger les exemples embarqués ex. __definition, donc mieux qu'en sens inverse) ; TODO déplacer sur la normalization mais comme elle a des champs propres pour l'instant ici (qui a en plus le champ _dbt_source_relation)
-  - name: birdz__apcom_supportaerien__expected_stg
+          compare_model: ref('apcom_aat_gthdv2_supportaerien') # TODO sur exemple démarqué, une fois --target fini ; PAS directement __expected pour gérer le parsing nécessaire (uuid... ; le même code sert à charger les exemples embarqués ex. __definition, donc mieux qu'en sens inverse) ; TODO déplacer sur la normalization mais comme elle a des champs propres pour l'instant ici (qui a en plus le champ _dbt_source_relation)
+  - name: apcom_birdz_supportaerien_expected_stg
     description: "test unitaire en --target test de transformation (normalisation) : attendu préparé portant la définition du test unitaire et permettant de la désactiver"
     # (sinon laisser le test mais le comparer avec le même plutôt que le réel, mais ça laisse un test dépourvu de sens)
     config:
@@ -21,8 +21,8 @@ models:
       enabled: "{{ target.name == 'test' }}"
     tests:
       - dbt_utils.equality:
-          compare_model: ref('birdz__apcom_supportaerien') # TODO sur exemple démarqué, une fois --target fini ; PAS directement __expected pour gérer le parsing nécessaire (uuid... ; le même code sert à charger les exemples embarqués ex. __definition, donc mieux qu'en sens inverse) ; TODO déplacer sur la normalization mais comme elle a des champs propres pour l'instant ici (qui a en plus le champ _dbt_source_relation)
-  - name: osm_posup__apcom_supportaerien__expected_stg
+          compare_model: ref('apcom_birdz_supportaerien') # TODO sur exemple démarqué, une fois --target fini ; PAS directement __expected pour gérer le parsing nécessaire (uuid... ; le même code sert à charger les exemples embarqués ex. __definition, donc mieux qu'en sens inverse) ; TODO déplacer sur la normalization mais comme elle a des champs propres pour l'instant ici (qui a en plus le champ _dbt_source_relation)
+  - name: apcom_osm_supportaerien_expected_stg
     description: "test unitaire en --target test de transformation (normalisation) : attendu préparé portant la définition du test unitaire et permettant de la désactiver"
     # (sinon laisser le test mais le comparer avec le même plutôt que le réel, mais ça laisse un test dépourvu de sens)
     config:
@@ -30,16 +30,19 @@ models:
       enabled: "{{ target.name == 'test' }}"
     tests:
       - dbt_utils.equality:
-          compare_model: ref('osm_powsupp__appuiscommuns_supportaerien') # TODO sur exemple démarqué, une fois --target fini ; PAS directement __expected pour gérer le parsing nécessaire (uuid... ; le même code sert à charger les exemples embarqués ex. __definition, donc mieux qu'en sens inverse) ; TODO déplacer sur la normalization mais comme elle a des champs propres pour l'instant ici (qui a en plus le champ _dbt_source_relation)
-  - name: osm_powsupp__appuiscommuns_supportaerien
+          compare_model: ref('apcom_osm_supportaerien_deduped') # TODO sur exemple démarqué, une fois --target fini ; PAS directement __expected pour gérer le parsing nécessaire (uuid... ; le même code sert à charger les exemples embarqués ex. __definition, donc mieux qu'en sens inverse) ; TODO déplacer sur la normalization mais comme elle a des champs propres pour l'instant ici (qui a en plus le champ _dbt_source_relation)
+  - name: apcom_osm_supportaerien_deduped
     description: la normalisation en supportaerien de la source ...extract...
     config:
       tags: ['normalization', 'transformation'] # 'pii' TODO generate from source__type.sql (and rename it)
-      meta: { "type" : "supportaerien" } # TODO definition: _definition ou de type ou invt., source/in: osm_
-  - name: apcom_supportaerien_unified
+      meta:
+        type : supportaerien # TODO definition: _definition ou de type ou invt., source/in: osm_
+  - name: apcom_std_supportaerien_unified
     description: l'union des supportaerien des toutes les sources
     config:
       tags: ['unification'] # 'pii' TODO generate from source__type.sql (and rename it)
+      meta:
+        type: supportaerien
     #tests:
     #  - dbt_utils.equality:
     #      compare_model: ref('osm_posup__apcom_supportaerien__expected_stg') # TODO sur exemple démarqué, une fois --target fini ; PAS directement __expected pour gérer le parsing nécessaire (uuid... ; le même code sert à charger les exemples embarqués ex. __definition, donc mieux qu'en sens inverse) ; TODO déplacer sur la normalization mais comme elle a des champs propres pour l'instant ici (qui a en plus le champ _dbt_source_relation)
@@ -100,14 +103,41 @@ models:
               config:
                 #description: 'tttest' # KO not seen in docs UI
                 where: "\"apcomsup_com_code\" not in ('ko', '98712', '98715', '98722', '98725', '98729', '98735', '98738', '98747', '98752', '98802', '98803', '98805', '98807', '98808', '98810', '98811', '98812', '98813', '98816', '98817', '98818', '98821', '98825', '98826', '98827', '98828', '98829', '98831', '98832', '98833')"
+  - name: apcom_std_supportaerien_deduped
+    description: l'union des supportaerien des toutes les sources
+    config:
+      tags: [ 'deduplication' ] # 'pii' TODO generate from source__type.sql (and rename it)
+      meta:
+        type: supportaerien
+        FDR_ROLE: echange
+        fal:
+          scripts:
+            - scripts/publish.py
+  - name: apcom_kpi_suivioccupation_day_departement
+    description: >
+      Indicateurs :
+      - Suivi de la dépose du cuivre
+      - Suivi de la montée en charge des déploiements
+      - Projection des échéances de fin d'occupation
+    config:
+      tags: [ 'indicators' ] # 'pii' TODO generate from source__type.sql (and rename it)
+      meta:
+        FDR_ROLE: kpi
+        fal:
+          scripts:
+            before :
+              - scripts/import.py
+            after :
+              - scripts/publish.py
 
 seeds:
-  #- name: appuiscommuns_supportaerien__definition
+  #- name: apcom_supportaerien_definition
   #  description: définition formelle du type supportaerien (pour l'instant copié manuellement depuis le Gitbook, à terme pourrait générer ce dernier voire un métamodèle guidant l'outillage)
   #  config:
   #    tags: ["definition"]
-  #    meta: { "type" : "supportaerien" }
-  - name: appuiscommuns_supportaerien__example
+  #    meta:
+  #      type: supportaerien
+  - name: apcom_def_supportaerien_example
     description: "Parsing of a priori (made-up), covering examples of the definition / interface.
       Examples have to be **as representative** of all possible data as possible because they are also the basis of the definition.
       For instance, for a commune INSEE id field, they should also include a non-integer value such as 2A035 (Belvédère-Campomoro).
@@ -117,17 +147,18 @@ seeds:
       3. NB. examples specific to each source type are provided in _source_example along their implementation (for which they are covering)"
     config:
       tags: ["example"] # echantillon, test
-      meta: { "type" : "supportaerien" }
+      meta:
+        type: supportaerien
       column_types:
         apcomsup_HauteurAppui: text
-  - name : osmgeodatamine_powersupports_extract
+  - name : apcom_osm_supportaerien_extract
     description: extrait représentatif des données de la source (type) osmgeodatamine_powersupports
     config:
       tags: ["sample", "extract"]
       column_types:
         com_insee: text # sinon integer et le code 01001 devient 1001
     #  "Libell\xE9_d_acheminement": text
-  - name : osm_posup__apcom_supportaerien__expected
+  - name : apcom_osm_supportaerien_expected
     description: attendu de la normalisation osmps
     config:
       tags: ["unittest", "expected"]
@@ -138,7 +169,7 @@ seeds:
     description: liste de valeurs possibles pour le champ
     config:
       tags: ["dictionary"]
-  - name: l_appuisaeriens_equipements
+  - name: l_appuisaeriens_equipement
     description: liste de valeurs possibles pour le champ
     config:
       tags: [ "dictionary" ]
@@ -157,13 +188,13 @@ seeds:
   #  description: table de traduction / réconciliation de la liste de valeurs depuis la source (jeu / org) osmgeodatamine
   #  config:
   #    tags: ["link", "mapping"]
-  - name: megalis_supportaerien_example
-    description: extrait représentatif des données de la source (type) megalis
+  - name: apcom_aat_gthdv2_supportaerien_example
+    description: extrait représentatif des données de la source (type) megalis aat_gthdv2
     config:
       tags: [ "sample", "example" ]
       #column_types: TODO
-  - name: megalis__apcom_supportaerien__expected
-    description: attendu de la normalisation megalis
+  - name: apcom_aat_gthdv2_supportaerien_expected
+    description: attendu de la normalisation megalis aat_gthdv2
     config:
       tags: [ "unittest", "expected" ]
       column_types:
@@ -178,7 +209,7 @@ seeds:
         apcomsup_StructureAppui: text
         # and many more gthdv2__ are gotten wrong...
         apcomsup_com_code: text # sinon integer et le code 01001 devient 1001
-  - name : birdz_supportaerien_example
+  - name : apcom_birdz_supportaerien_example
     description: extrait représentatif des données de la source (type) birdz
     config:
       tags: ["sample", "example"]
@@ -187,7 +218,7 @@ seeds:
         "PDR_NUM,C,254": text # sinon 29051_00040 lu comme 2905100040 (!), type détecté comme integer et erreur integer out of range
         "ADR_POS_X,C,254": text # car contient ',' sinon lu à l'anglaise
         "ADR_POS_Y,C,254": text # car contient ',' sinon lu à l'anglaise
-  - name: birdz__apcom_supportaerien__expected
+  - name: apcom_birdz_supportaerien_expected
     description: attendu de la normalisation birdz
     config:
       tags: [ "unittest", "expected" ]

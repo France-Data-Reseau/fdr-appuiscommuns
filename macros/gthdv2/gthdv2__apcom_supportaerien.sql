@@ -42,6 +42,8 @@ renamed as (
     -- et tables SQL : https://github.com/GraceTHD-community/GraceTHD-MCD/blob/master/sql_postgis/gracethd_30_tables.sql
     -- et valeurs : https://github.com/GraceTHD-community/GraceTHD-MCD/blob/master/sql_postgis/gracethd_20_insert.sql
 
+    -- ne créé que des poteaux, mais tous occupés (mais sans dire par quelles occupations)
+
     -- sont de type "table géographique" et ont donc sans doute un champ geometry en plus
     -- de ceux listés dans le standard :
     -- t_cableline/cheminement/noeud/adresse/z*/empreinte
@@ -69,7 +71,7 @@ renamed as (
         "pt_ad_code,C,254"::text as "{{ sourceFieldPrefix }}pt_ad_code", -- FK OBSOLETE (Les attributs d'adressage postal et cadastral table via t_ptech_patch202) : Identifiant unique de l'adresse du point technique (pour les points techniques qui peuvent être associés à une adresse précise).
         "pt_gest_do,C,20"::text as "{{ sourceFieldPrefix }}pt_gest_do", -- FK Gestionnaire du domaine sur lequel est situé le point technique
         "pt_prop_do,C,20"::text as "{{ sourceFieldPrefix }}pt_prop_do", -- FK Propriétaire du domaine sur lequel est situé le point technique
-        "pt_prop,C,20"::text as "{{ fieldPrefix }}Proprietaire", -- ORMB0000000003 FK Propriétaire du point technique
+        "pt_prop,C,20"::text as "{{ fieldPrefix }}Proprietaire", -- ORMB0000000003 FK Propriétaire du point technique = AODE ! mais comment SIREN, table statique séparée ? PEUT être différent un mois plus tard !!
         "pt_gest,C,20"::text as "{{ fieldPrefix }}Gestionnaire", -- FK Gestionnaire du point technique
         "pt_user,C,20"::text as "{{ sourceFieldPrefix }}pt_user", -- FK Utilisateur du point technique
         "pt_proptyp,C,3"::text as "{{ sourceFieldPrefix }}pt_proptyp", -- LOC FK Type de propriété

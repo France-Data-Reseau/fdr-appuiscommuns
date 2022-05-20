@@ -18,12 +18,13 @@ TODO can't be replaced by from_csv because is the actual definition, BUT could b
 {{ apcom_supportaerien_from_csv(ref(model.name[:-4])) }}
 #}
 
-{% macro apcom_supportaerien_from_csv(source_model) %}
+{% macro apcom_supportaerien_from_csv(source_model=ref(model.name | replace('_stg', ''))) %}
 
 {% set fieldPrefix = 'apcomsup_' %}
+{% set def_model = ref('apcom_def_supportaerien_example') %}
 
 select
-    {{ dbt_utils.star(ref('appuiscommuns_supportaerien__example'),
+    {{ dbt_utils.star(def_model,
         except=[fieldPrefix + 'Id', 'geometry', fieldPrefix + 'HauteurAppui', fieldPrefix + 'HauteurTotal',
         fieldPrefix + 'Azimut', fieldPrefix + 'DateConstruction', fieldPrefix + 'EffortTransversal',
         fieldPrefix + 'RemonteeAerosout', fieldPrefix + 'BoisCreosote', fieldPrefix + 'BandeauVert']) }},

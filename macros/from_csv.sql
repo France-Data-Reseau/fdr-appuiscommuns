@@ -14,7 +14,7 @@ Polyline is here to/from DBT models (read/prepare seeds), so rather use geojson
 - ? textify everything else
 
 parameters :
-- source : a dbt model (from ref() or source()) (NOT a WITH-defined alias, because it is always used in another _csv.sql model)
+- source : a dbt model (from ref() or source()), by default the current one minus _stg if any (NOT a WITH-defined alias, because it is always used in another _csv.sql model)
 - column_models : used to guide parsing of values from text and add missing columns as NULL if enabled (complete_columns_with_null)
 Only the first column with a given name is kept?
 - complete_columns_with_null
@@ -27,6 +27,8 @@ optional_column_model_TODO_or_types
 {% macro from_csv(source, column_models=none, complete_columns_with_null=false, wkt_rather_than_geosjon=false,
     date_formats=['YYYY-MM-DDTHH24:mi:ss.SSS', 'YYYY/MM/DD HH24:mi:ss.SSS', 'DD/MM/YYYY HH24:mi:ss.SSS'],
     geo_pattern="geo.*", uuid_pattern="_Id|_Ref") %}
+
+{% set source = source if source else ref(model.name | replace('_stg', '')) %}
 
 {%- set cols = adapter.get_columns_in_relation(source) | list -%}
 {%- set col_names = cols | map(attribute='name') | list -%}

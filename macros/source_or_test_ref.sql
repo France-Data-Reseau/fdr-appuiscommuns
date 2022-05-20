@@ -29,7 +29,7 @@ inspired by https://servian.dev/unit-testing-in-dbt-part-1-d0cc20fd189a
 
       {% endif %}
 
-      {% for relation in dbt_utils.get_relations_by_pattern(this.schema, model_name) %}
+      {% for relation in dbt_utils.get_relations_by_pattern(this.schema, model_name ~ '_src') %}
           {# else either it's a ref, therefore created in this schema, even if defined by a dep package #}
           {{ return(relation) }}
       {% endfor %}

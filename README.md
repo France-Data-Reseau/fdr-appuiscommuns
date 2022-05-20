@@ -11,14 +11,44 @@ fct :
 segment "occupant télécoms, technologie et cheminement" ?? et cheminement ?
 Suivi des typologies conventionnelles - "conventions" : quel champ ?
 
+DBT 101 :
+- snapshots : SCD2 that can be updated / run separately
+- exposures : define outside uses in YAML, to publish doc and to run them separately
+- metrics : defined in YAML, notably : time_grains=[day, week, month], dimensions=[plan, country], filters ; pour doc, MAIS ne produisent pas (de relation / model / macro) en elles-mêmes
+
 TODO :
+- suite : source_or_test_ref() => ref() override, apcom_def_*_src hors test, test schema
+- id découpler chaque src de std+kpi : pour garder des workflow simples :
+  - chaque (type de) src est exécutée pour chaque source en changeant la configuration d'alias
+- nommage - guides :
+  - FINAL :
+    - apcom_birdz_type_src est la dbt source qui unit (hors dbt donc) toutes les données source au format birdz
+    - apcom_def_type_src est la dbt source qui unit (hors dbt donc) toutes les données source au format natif
+  - type
+  - partitionnement (qui peut être type de source voire source avant normalisation, divers enrichissement pour divers usages après)
+  - (date : oui est une "version" mais pas un partitionnement, en général elle est DANS la donnée, à moins d'être un snapshot figé, car si pas figé est une branche et donc pas vraiement une date)
+  - workflow, étape de, majeure : peuvent en être des indicateurs / guides. Ils sont :
+    - "source" (décliné par source : megalis... TODO native, CSV). Les éléments discriminants sont le type fourni, et si nécessaire le traitement appliqué, voire le type source (SI un type normalisé provient de plusieurs types sources, qui sont alors peut-être autant de sous-types de sources).
+    - "normalisation" sur sa partie définition, unification et déduplication. Les éléments discriminants sont le type fourni, puis l'étape appliquée.
+    - "exploitation" / usage (indicateurs / kpi, mais sans doute pas la version CSV, geopackage, geoserver). Les discriminants sont :
+      - le concept support de la métrique qui est souvent un type,
+      - la métrique (linéaire de canalisation, poteau électrique ou technologie d'équipement...) MAIS le plus souvent cette relation concept suffit à fournir beaucoup / toutes les métriques (par des group by différents en dataviz ex. superset),
+      - puis si nécessaire les dimensions (territoire reg/dep/commune qui est une hiérarchie multiple avec AODE, éventuellement métier ex. sur/sous-types de matériau ; mais tout cela est de l'enrichissement) et leurs grains offerts, y compris temporelle (là il peut y avoir des choses à faire : générer des jours ou avoir préparé un historique en SCD2 / DBT snapshot)    - Les enrichissements sont des suppléments de "normalisation" ou (que/et) des requis de "exploitation".
+  - Ils peuvent ainsi être classés dans des dossiers : apcom (normalisation, qui est aussi le dossier du projet), (apcom/)(src ou source/)megalis..., (apcom/)(exploitation/)kpi(/kpi1 ex. d'occupation). Cette classification peut être utilement reprise en préfixe de relation SQL / model DBT :
+    - apcom_(src_)osm_supportaerien(_translated,deduped), apcom_std_supportaerien(_unified,deduped), apcom_(use_)kpi_suivioccupation_day
+- TODO on peut unifier AVANT translation, dans vue créée par macro !
+- fal :
+  - the idea is to setup one fal script ex. publish.py on EACH model, rather than have a single script that visits and checks meta...
+  - dbt fal run -- all (else runs no script)
+  - airbyte :)
+  - peut désormais exécuter aussi avant (--)before, mais pas encore de macro dbt
+- mécanisme de test de non régression : publié dans un schema et JEU _test tout public ! possibilité de débrayer certaines sources mais alors pas tout public ?? (alors _staging mêmes droits que normal)
 - comment gérer des données imparfaites :
   - (fournir tableschema et y inciter)
   - OPTION pour chaque type de chaque type de source, définir des tests de contrainte de schéma ; les faire exécuter, remonter rapport et résultats
   - TODO que sur les données où les tests sont OK : analyser les résultats (json ?) pour en tirer le bon filtre de la liste des ressources prise de CKAN
   - normalisation qui par de et accepte des valeurs texte : OK sauf TODO seeds pour tests
 - Lambert 93 : la plateforme stocke en 4326 WGS84, et peut fournir la projection Lambert 93 par conversion. Lambert 93 est une projection, donc imparfaite, et erronée en dehors de la métropole.
-- reste : apcomindoc source_suffix & apcomeq+ native source union, renommer .sql+
 - dedup :
   - methodo : within source first otherwise too long
   - pb dedup : osm prio pourquoi ? parce que le uuid à garder est plutôt ceux des sources pour que les apcomeq les référence ! sinon les mettre à jour où multiple ids à la elastic "fusion" mais requiert array operators : https://stackoverflow.com/questions/4058731/can-postgresql-index-array-columns
@@ -35,7 +65,7 @@ TODO :
 - ::date => timestamp !! https://stackoverflow.com/questions/14113469/generating-time-series-between-two-dates-in-postgresql
 - !!! pour arriver à livrer quelque chose, réaliser les exemples et partir d'eux !!
 - id : _test pas schema mais models sur ce qui est à tester (tests davantage unitaires)
-- pass data to dbt : run-operation --args '{my_variable: my_value}'
+- pass data to dbt : dbt run --vars '{my_variable: my_value}' ou dbt run-operation --args '{my_variable: my_value}', ou générer un source.yml normé MAIS manque de métas sur les tables listées (à part leur nom normé) et pas possible d'y inclure la table CKAN datastore à visibiliser en vue SQL au préalable donc il faut un autre format en plus de toutes façons
 - LATER show test results (state, report, bad data) : logs as json, target/run(_results)... https://stackoverflow.com/questions/61238395/can-the-results-of-dbt-test-be-converted-to-report
 - better _computed macro ? or none ?
 - OUI TODO def aussi pour chaque source car requis pour leur union si elles n'ont pas tous les champs OU sens inverse au-dessus de _translatedS macrotés ? ; LATER def de yaml, guidant aussi to/from_csv ?
@@ -273,13 +303,15 @@ Gotchas - PostgreSQL :
 - HINT:  No function matches the given name and argument types. => add explicit type casts to the arguments
 - FAQ postgres blocks & logs says WARNING:  there is already a transaction in progress => terminate all running queries : SELECT pg_cancel_backend(pid) FROM pg_stat_activity WHERE state = 'active' and pid <> pg_backend_pid(); 
 
+Gotchas - FAL :
+- TODO
 
 
 ## Install, build & run
 
 **IMPORTANT** après dbt deps, remplacer le contenu de dbt_packages/dbt_profiler par celui de https://github.com/ozwillo/dbt-profiler (attention au "_", ne sera plus nécessaire quand une nouvelle version aura été publiée incluant https://github.com/data-mie/dbt-profiler/pull/38 )
 
-### Install DBT (1.0)
+### Install : DBT (1.0), fal, ckanapi
 
 comme à https://docs.getdbt.com/dbt-cli/install/pip :
 (mais sur Mac OSX voir https://docs.getdbt.com/dbt-cli/install/homebrew )
@@ -292,6 +324,11 @@ python3 -m venv dbt-env
 source dbt-env/bin/activate
 pip install --upgrade pip wheel setuptools
 pip install dbt-postgres
+
+pip install fal
+
+pip install ckanapi
+
 # mise à jour :
 #pip install --upgrade dbt-postgres
 ```

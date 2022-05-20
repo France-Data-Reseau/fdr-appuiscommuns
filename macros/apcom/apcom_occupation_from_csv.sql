@@ -1,7 +1,5 @@
 {#
 
-NOT USED ?
-
 Parsing of
 - sources that are directly in the apcom types
 - a priori (made-up), covering examples of the definition / interface.
@@ -18,10 +16,10 @@ TODO can't be replaced by from_csv because is the actual definition, BUT could b
 
 #}
 
-{% macro apcom_occupation_from_csv(source_model) %}
+{% macro apcom_occupation_from_csv(source_model=ref(model.name | replace('_stg', ''))) %}
 
 {% set fieldPrefix = 'apcomoc_' %}
-{% set def_model = ref('apcom_occupation__example') %}
+{% set def_model = ref('apcom_def_occupation_example') %}
 
 select
     {{ dbt_utils.star(def_model,
