@@ -1,6 +1,6 @@
 {#
 Defines useful UDFs :
-- lenient cast / conversion
+- lenient cast / conversion, from text (so if may not be text, their use must be conditioned in dedicated macros such as to_numeric_or_null.sql)
 
 To use them, they have to be prefixed by the current schema (because they are created here, else no rights),
 and arguments must have the exact right type, ex. :
@@ -38,6 +38,61 @@ begin
     end;
   END LOOP;
   return NULL;
+exception
+  when others then return null;
+end;
+$$ language plpgsql;
+
+-- NOT USED in case where checking PostGIS types really can't be done in DBT, so would have to be done in PgSQL :
+-- inspired by https://dzone.com/articles/polymorphism-in-sql-part-one-anyelement-and-anyarr
+create or replace function __geojson_to_geometry_or_null (val ANYELEMENT, srid integer)
+  returns public.geometry -- else error can't find type geometry
+as $$
+declare
+  val_type constant regtype := pg_typeof(val);
+begin
+  case val_type
+      when pg_typeof(null::public.geometry) then
+        return val;
+      else
+        return ST_Transform(ST_GeomFromGeoJSON(s), srid);
+  end case;
+exception
+  when others then return null;
+end;
+$$ language plpgsql;
+create or replace function __wkt_to_geometry_or_null (val ANYELEMENT, srid integer)
+  returns public.geometry -- else error can't find type geometry
+as $$
+declare
+  val_type constant regtype := pg_typeof(val);
+begin
+  case val_type
+      when pg_typeof(null::public.geometry) then
+        return val;
+      else
+        return ST_GeomFROMText(s, srid);
+  end case;
+exception
+  when others then return null;
+end;
+$$ language plpgsql;
+
+-- NOO NOW TODO LATER when able to check geometry type in DBT :
+create or replace function geojson_to_geometry_or_null (s text, srid integer)
+  returns public.geometry -- else error can't find type geometry
+as $$
+begin
+  return ST_Transform(ST_GeomFromGeoJSON(s), srid);
+exception
+  when others then return null;
+end;
+$$ language plpgsql;
+create or replace function wkt_to_geometry_or_null (s text, srid integer)
+  returns public.geometry -- else error can't find type geometry
+as $$
+begin
+  return ST_GeomFROMText(s, srid);
 exception
   when others then return null;
 end;
@@ -85,6 +140,16 @@ exception
   exception
     when others then return null;
   end;
+end;
+$$ language plpgsql;
+
+create or replace function to_boolean_or_null (n numeric)
+  returns boolean
+as $$
+begin
+  return cast(n as boolean); -- incl. null
+exception
+  when others then return null;
 end;
 $$ language plpgsql;
 
