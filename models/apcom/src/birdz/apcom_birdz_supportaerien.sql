@@ -31,7 +31,7 @@ assuming no need for exact dedup by src_id or geometry
   )
 }}
 
-{% set sourceModel = source_or_test_ref('birdz', 'birdz_supportaerien') %} -- TODO raw_
+{% set sourceModel = source_or_test_ref('appuiscommuns', 'apcom_birdz_supportaerien') %} -- TODO raw_
 
 with source as (
 
