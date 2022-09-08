@@ -1,18 +1,30 @@
 '''
 Import (incrémental) des données des ressources CKAN selon les champs personnalisés FDR_ dans la base SQL datalake
-- se base sur la table public.fdr_resource de toutes les ressources CKAN ayant des champs personnalisés FDR configurés sur leur jeu de données. Pour l'instant synchronisée à la main dans la base datastore depuis la vue SQL définie dans la base CKAN, TODO LATER automatiquement par l'ELT Airbyte. Cette méthode est plus efficace que de nombreux appels à l'API CKAN.
+- se base sur la table public.fdr_resource de toutes les ressources CKAN ayant des champs personnalisés FDR configurés sur leur jeu de données.
+Pour l'instant synchronisée à la main dans la base datastore depuis la vue SQL définie dans la base CKAN,
+TODO LATER automatiquement par l'ELT Airbyte. Cette méthode est plus efficace que de nombreux appels à l'API CKAN.
 - pour chacune :
-  - vérification de ses champs personnalisés FDR,
-  - et de la nécessité d'importer (pas si archive, que si changement depuis le dernier import réussi),
+  - validation : de ses champs personnalisés FDR,
+  - incrémental : téléchargement et insertion que si changement depuis le dernier import réussi,
   - téléchargement depuis CKAN par son API
-  - puis import selon le format.
+  - puis, si FDR_TARGET!=archive, import selon le format.
 - Actuellement seul geopackage est supporté (par exécution de la commande ogr2ogr de GDAL, pouvant être dockérisée)
   - mais geojson et autres formats géographiques peuvent l'être facilement par la même méthode.
   - CSV pourrait l'être aussi, par pandas avec un peu plus de travail, à moins de rester sur la visibilisation des tables importées par CKAN dans le datastore (pour l'instant manuelle cependant).
 - résultats et erreurs écrits dans la table france-data-reseau.fdr_import_resource
-  - qui sert de référence à tous les traitements exploitant les données importées pour en retrouver les tables et leur configuration (notamment du type de traitement à appliquer, par FDR_SOURCE_NOM), qu'ils soient en DBT / SQL ou en python.
-  - mis à disposition auprès des collectivités en CSV dans CKAN  dans l'organisation FDR par le script publish.py
-- TODO : support du format CSV, voire geojson (et bien sûr automatisation de l'ensemble des opérations) ; exécution plutôt une fois par projet DBT cas d'usage ? ou au contraire plus simplement même de leurs traitements en une seule fois dans un projet DBT qui dépend de tous ?
+  - mise à disposition auprès des collectivités en CSV dans CKAN  dans l'organisation FDR par le script publish.py
+  - et surtout, qui sert de référence à tous les traitements exploitant les données importées pour en retrouver les tables et leur configuration (notamment du type de traitement à appliquer, par FDR_SOURCE_NOM), qu'ils soient en DBT / SQL ou en python.
+- NB. dans le cas de traitements DBT :
+  - c'est la macro fdr_source_union_from_name() qui unifie toutes les tables ayant une FDR_SOURCE_NOM données, à appeler depuis un model DBT <préfixe cas usage>_src_<FDR_SOURCE_NOM>_parsed.sql
+  - elle effectue une première conversion générique des champs vers les types définis dans un model DBT <préfixe cas usage>_def_<type en général FDR_SOURCE_NOM>_definition.sql (par exemple sdirve_def_indicateurs_definition.sql), elle-même basée sur la conversion SQL spécifique d'un exemple minimal CSV statique, et pouvant comprendre une mise en correspondance (mapping) des noms des champs
+  - après quoi peut être effectué tout complément de normalisation dans un model _translated, d'enrichissement (labels des codes), rapprochement géographique (avec communes ou entre types), déduplication, préparation d'indicateurs / kpis...
+TODO :
+- publication des résultats qu'en jeu de données privé
+- automatisation de l'ensemble des opérations
+- support complet du format CSV, voire geojson
+- support du "dictionnaire de données" utilisé par Eau potable par mapping avancé et traduction des codes guidée ?
+- exécution plutôt une fois par projet DBT cas d'usage ? ou au contraire plus simplement même de leurs traitements en une seule fois dans un projet DBT qui dépend de tous ?
+
 
 OBSOLETE introspect CKAN API to :
 - build list of datastore-imported files (ex. FDR_ROLE=source, format=gepackage) to make visible as views using dbt on-run-start macro
@@ -39,14 +51,20 @@ dbt run-operation create_roles_schemas --target prod_sync
 set -a ; source env.prod ; set +a
 # IF NOT CREATED by previous command, create current (prod_sync) schema for fal import or on-run-start create_udfs (at least one model is required) :
 dbt run --select meta --target prod_sync
+
+# import :
 fal run --before
 # or
 fal run --target prod_sync --before
 
+# publish :
+dbt run --target prod --select fdr_import_resource_view
+fal run --select all --target prod
+
 #create views UNIONing imported tables of the same FDR_SOURCE_NOM :
 NON dbt run-operation create_views_union --target prod_sync, plutôt DANS un projet cas d'usage, par exemple :
 cd fdr-eaupotable/
-dbt run --select eaupot_src_canalisations_parsed
+dbt run --select eaupot_src_canalisations_en_service_parsed
 
 or in test :
 set -a ; source env.test ; set +a
@@ -55,7 +73,7 @@ cd fdr-france-data-reseau/
 dbt run --select meta --target prod_sync
 fal run --target prod_sync_test --before
 cd fdr-eaupotable/
-dbt run --target test --select eaupot_src_canalisations_parsed
+dbt run --target test --select eaupot_src_canalisations_en_service_parsed
 '''
 
 
@@ -182,8 +200,9 @@ def build_last_changed_string(resource):
     ds_metadata_modified = resource.get('ds_metadata_modified')
     last_changed = last_modified if not ds_metadata_modified else ds_metadata_modified if not last_modified else last_modified if last_modified > ds_metadata_modified else ds_metadata_modified
     last_changed_string = last_changed.isoformat() if last_changed else None
+    # because else NotImplementedError: Don't know how to literal-quote value numpy.datetime
+    # https://stackoverflow.com/questions/49490623/datetime-filtering-with-sqlalchemy-isnt-working
     return last_changed_string
-
 
 def download_ckan_resource(resource):
     step = 'download'
@@ -263,7 +282,7 @@ def import_resource(resource, import_state):
 
     FDR_ROLE = resource['fdr_role'] if resource['fdr_role'] is not None and len(resource['fdr_role'].strip()) != 0 else 'source' # TODO 'FDR_ROLE'
     print('import_resource', resource['name'], FDR_ROLE)
-    if FDR_ROLE != 'source':
+    if FDR_ROLE not in ['source', 'perimetre']:
         return
 
     data_owner_id_tmp = resource['fdr_siren'] if resource['fdr_siren'] is not None and len(resource['fdr_siren'].strip()) != 0 else resource['org_id'][:4] + resource['org_name'][-6:] # TODO FDR_SIREN

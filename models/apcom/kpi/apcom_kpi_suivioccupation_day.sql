@@ -27,7 +27,7 @@ Cette représentation pourra être déclinée à différentes échelles géograp
 }}
 
 with suocc as (
-  --select * from {{ source_or_test_ref('TODO', 'apcom_std_suivioccupation') }}
+  {# select * from {{ source_or_test_ref('TODO', 'apcom_std_suivioccupation') }} #}
   select * from {{ ref('apcom_std_suivioccupation_unified') }}
 
 ), occupation_date_range as (

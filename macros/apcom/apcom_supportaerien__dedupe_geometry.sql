@@ -1,6 +1,8 @@
 {#
-2 phase dedup : first create matching pairs, then merge them (here using a merge resolution order)
-Both steps could be separated, and the merge be done in another, usage-specific macro.
+2 phase deduplication : first creates matching pairs (according to provided SQL criteria),
+then merges them using the provided merge resolution order,
+and adds in each line the ARRAY of ids merged in it.
+NB. both steps could be separated, and the merge be done in another, usage-specific macro.
 
 TODO obviously faster if indexed on id fields (source name and id : _src_name, _src_id)
 TODO and additional order fields
@@ -16,6 +18,11 @@ then of merge resolution
 - fields : to merge across matched duplicates and include in the final product
 - criteria : SQL criteria that defines the duplicate matches
 - TODO debug fields (geometry...) : to pass along
+
+returns merged lines of data with :
+- all input fields. The first non-NULL value according to the merge order (order_by_fields)
+- merged_ids : ARRAY of all ids merged in a single line of data
+- ordered by order_by_fields
 #}
 
 -- TODO apcom_supportaerien_translation__dup_geometry : first step producing only duplicates,

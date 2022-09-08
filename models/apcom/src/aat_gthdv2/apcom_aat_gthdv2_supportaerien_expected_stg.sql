@@ -14,4 +14,4 @@ TODO generate
   )
 }}
 
-{{ from_csv(ref(model.name[:-4]), [ref('apcom_def_supportaerien_definition'), ref('apcom_aat_gthdv2_supportaerien_example')], wkt_rather_than_geosjon=true) }}
+{{ from_csv(ref(model.name[:-4]), [ref('apcom_def_supportaerien_definition'), ref('apcom_aat_gthdv2_supportaerien_example')], wkt_rather_than_geojson=true) }}

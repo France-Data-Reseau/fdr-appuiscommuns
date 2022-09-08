@@ -1,5 +1,5 @@
 {#
-1 phase n-n reconciliation / linking - produce array of linked object ids from subject
+1 phase n-n reconciliation / linking - produce ARRAY of linked object ids from subject
 Partie générique - link_geometry_fdrcommune, utilisé dans apcom_supportaerien
 
 TODO quite generic macro, still more

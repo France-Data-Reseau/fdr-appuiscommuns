@@ -7,8 +7,6 @@ make it a table IF needed for further processing before
 
 {% macro apcom_supportaerien__deduped_computed(translated_source_relation, fieldPrefix) %}
 
-{% set sourceModel = source_or_test_ref('appuiscommuns', 'osmgeodatamine_powersupports') %}
-
 with id_deduped as (
     -- id deduplication :
     -- OR LATER ON normalized id

@@ -24,10 +24,6 @@ Partie spécifique à la source
 
 with source as (
 
-    {#-
-    Normally we would select from the table here, but we are using seeds to load
-    our data in this project
-    #}
     select * from {{ sourceModel }}
     {% if var('limit', 0) > 0 %}
     LIMIT {{ var('limit') }}

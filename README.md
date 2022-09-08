@@ -1,47 +1,13 @@
 # Projet dbt appuiscommuns et autres exemples France Data Réseau
 
-Ce projet dbt (Data Build Tool) est théoriquement consacré au cas d'usage Appuis Communs, dans le cadre de l'initiative France Data Réseau. Toutefois, il contient pour l'instant aussi la transformation des données de la source publique OSM Geodatamine power supports (de type URL CSV) indiquée par le partenaire expert et "data steward" Datactivist vers le modèle normalisé de ce cas d'usage, au lieu d'être dans un projet dbt dédié tel fdr_appuiscommuns_osm(powersupports).
+Ce projet dbt (Data Build Tool) est consacré au cas d'usage Appuis Communs, dans le cadre de l'initiative France Data Réseau.
 
-Qs fct :
-pb dedup
-revoir avec François tous les préfixes ! (apcom, type, source / type...).
-- apcomeq_IdEquipement => apcomeq_Id ?
-l_appuisaeriens_equipementS ?
-fct :
-segment "occupant télécoms, technologie et cheminement" ?? et cheminement ?
-Suivi des typologies conventionnelles - "conventions" : quel champ ?
+### OBSOLETE TODO :
 
-DBT 101 :
-- snapshots : SCD2 that can be updated / run separately
-- exposures : define outside uses in YAML, to publish doc and to run them separately
-- metrics : defined in YAML, notably : time_grains=[day, week, month], dimensions=[plan, country], filters ; pour doc, MAIS ne produisent pas (de relation / model / macro) en elles-mêmes
-
-TODO :
 - suite : source_or_test_ref() => ref() override, apcom_def_*_src hors test, test schema
 - id découpler chaque src de std+kpi : pour garder des workflow simples :
   - chaque (type de) src est exécutée pour chaque source en changeant la configuration d'alias
-- nommage - guides :
-  - FINAL :
-    - apcom_birdz_type_src est la dbt source qui unit (hors dbt donc) toutes les données source au format birdz
-    - apcom_def_type_src est la dbt source qui unit (hors dbt donc) toutes les données source au format natif
-  - type
-  - partitionnement (qui peut être type de source voire source avant normalisation, divers enrichissement pour divers usages après)
-  - (date : oui est une "version" mais pas un partitionnement, en général elle est DANS la donnée, à moins d'être un snapshot figé, car si pas figé est une branche et donc pas vraiement une date)
-  - workflow, étape de, majeure : peuvent en être des indicateurs / guides. Ils sont :
-    - "source" (décliné par source : megalis... TODO native, CSV). Les éléments discriminants sont le type fourni, et si nécessaire le traitement appliqué, voire le type source (SI un type normalisé provient de plusieurs types sources, qui sont alors peut-être autant de sous-types de sources).
-    - "normalisation" sur sa partie définition, unification et déduplication. Les éléments discriminants sont le type fourni, puis l'étape appliquée.
-    - "exploitation" / usage (indicateurs / kpi, mais sans doute pas la version CSV, geopackage, geoserver). Les discriminants sont :
-      - le concept support de la métrique qui est souvent un type,
-      - la métrique (linéaire de canalisation, poteau électrique ou technologie d'équipement...) MAIS le plus souvent cette relation concept suffit à fournir beaucoup / toutes les métriques (par des group by différents en dataviz ex. superset),
-      - puis si nécessaire les dimensions (territoire reg/dep/commune qui est une hiérarchie multiple avec AODE, éventuellement métier ex. sur/sous-types de matériau ; mais tout cela est de l'enrichissement) et leurs grains offerts, y compris temporelle (là il peut y avoir des choses à faire : générer des jours ou avoir préparé un historique en SCD2 / DBT snapshot)    - Les enrichissements sont des suppléments de "normalisation" ou (que/et) des requis de "exploitation".
-  - Ils peuvent ainsi être classés dans des dossiers : apcom (normalisation, qui est aussi le dossier du projet), (apcom/)(src ou source/)megalis..., (apcom/)(exploitation/)kpi(/kpi1 ex. d'occupation). Cette classification peut être utilement reprise en préfixe de relation SQL / model DBT :
-    - apcom_(src_)osm_supportaerien(_translated,deduped), apcom_std_supportaerien(_unified,deduped), apcom_(use_)kpi_suivioccupation_day
 - TODO on peut unifier AVANT translation, dans vue créée par macro !
-- fal :
-  - the idea is to setup one fal script ex. publish.py on EACH model, rather than have a single script that visits and checks meta...
-  - dbt fal run -- all (else runs no script)
-  - airbyte :)
-  - peut désormais exécuter aussi avant (--)before, mais pas encore de macro dbt
 - mécanisme de test de non régression : publié dans un schema et JEU _test tout public ! possibilité de débrayer certaines sources mais alors pas tout public ?? (alors _staging mêmes droits que normal)
 - comment gérer des données imparfaites :
   - (fournir tableschema et y inciter)
@@ -69,9 +35,9 @@ TODO :
 - LATER show test results (state, report, bad data) : logs as json, target/run(_results)... https://stackoverflow.com/questions/61238395/can-the-results-of-dbt-test-be-converted-to-report
 - better _computed macro ? or none ?
 - OUI TODO def aussi pour chaque source car requis pour leur union si elles n'ont pas tous les champs OU sens inverse au-dessus de _translatedS macrotés ? ; LATER def de yaml, guidant aussi to/from_csv ?
-- utilise Lambert 93 pour le calcul en m ? stocké aussi / instead ?
+- utilise Lambert 93 pour le calcul en m ? stocké aussi / seulement ?
 - notion de order by field
-- TODO TODO how to share schema constraint tests ? & refactor (one yml per source folder ?)
+- TODO Q how to share schema constraint tests ? & refactor (one yml per source folder ?)
 - périmètres :
  - trouver et télécharger des fichiers geojson (ou quelconques), et les unifier en CSV ou import direct en base, avec index geo (requis ?)
  - s'en servir pour filtrer les données non de collectivités, notamment apcom OSM, et ainsi éviter des pbs de nettoyage et de performance
@@ -125,7 +91,8 @@ manque "pourquoi besoin de" ou "architecture fonctionnelle" qui fait le lien ent
 - TODO copier doublons
 
 
-## Ce que fait ce projet dbt :
+
+## OBSOLETE Ce que fait ce projet dbt :
 
 - côté source :
  - exemples embarqués : _extract.csv (réel, à ne pas ouvrir sur github ?), __definition.csv (imaginaire)
@@ -226,15 +193,6 @@ left join "datastore"."france-data-reseau"."georef-france-commune.csv" odscom on
  - et ceux qu'on ne veut pas peuvent être désactivés, tous ou dans un dossier https://github.com/dbt-labs/dbt-core/issues/3043 ! (par ailleurs, ils peuvent être dans un autre schema, avoir des tags...)
  - Q comment mettre à jour la "mécanique" d'un projet de source (ou...) depuis son projet de base ? il faudrait qu'elle soit toute entière dans le projet dep ! et seuls les overrides et remplissage de CSV etc. dans le projet réel ?! MAIS pour l'instant pas d'overrides ( https://github.com/dbt-labs/dbt-core/issues/4157 , les seuls sont overrides sont de source https://docs.getdbt.com/reference/resource-properties/overrides ) donc simplement désactivés les models de dep à overrider et les copier et modifier dans le projet source.
 
-- TODO nommage plus global et cohérent :
- - des fichiers : models (sample/src__fournisseur_source_typeunifie_version.sql), description de source (fournisseur_nom_source.yml), tests génériques de contrainte de schema ((fdr_?)casdusage_schema.yml), exploitation (perimetre__monexploitation.sql), profilage
- - dossiers : trouver une meillere organisation des fichiers
- - par étape du processus de traitement des données (source, normalized, unified, exploitation...) ?
- - (aidé par vars "source"/"coll1" ? et pour uuid namespace https://docs.getdbt.com/docs/building-a-dbt-project/building-models/using-variables)
- - supportant un seul projet dbt pour une source alimentant plusieurs cas d'usage ?
- - supportant au sein d'un seul projet dbt de la source ET de l'exploitation, par exemple par fournisseur (expert data steward) ou pour des tests ?
- - TODO et selon matérialisation / étapes / téléchargeables (voir plus bas)
- - TODO et selon patterns (donnant tags) permettant analytics metamodel seules dispos dans macros (et non tags)
  
 - code python pour : alimenter la base datalake (depuis fichiers mis en ligne sur CKAN) ou préparer, exploiter en déhors de la base (ou avec fal https://github.com/fal-ai/fal )
 - réconciliation et dictionnaires de valeurs : les rentrer plutôt par CKAN ?? (mais serait moins bien versionné)
@@ -274,6 +232,36 @@ left join "datastore"."france-data-reseau"."georef-france-commune.csv" odscom on
 - ouvrir les projets github, après élimination / démarquage de toutes données réelles
 - datalake : tableau des logins/pass, organisation et IP ; automatisations
 
+
+### Nommage
+
+- FINAL :
+    - apcom_birdz_type_src est la dbt source qui unit (hors dbt donc) toutes les données source au format birdz
+    - apcom_def_type_src est la dbt source qui unit (hors dbt donc) toutes les données source au format natif
+- type
+- partitionnement (qui peut être type de source voire source avant normalisation, divers enrichissement pour divers usages après)
+- (date : oui est une "version" mais pas un partitionnement, en général elle est DANS la donnée, à moins d'être un snapshot figé, car si pas figé est une branche et donc pas vraiement une date)
+- workflow, étape de, majeure : peuvent en être des indicateurs / guides. Ils sont :
+    - "source" (décliné par source : megalis... TODO native, CSV). Les éléments discriminants sont le type fourni, et si nécessaire le traitement appliqué, voire le type source (SI un type normalisé provient de plusieurs types sources, qui sont alors peut-être autant de sous-types de sources).
+    - "normalisation" sur sa partie définition, unification et déduplication. Les éléments discriminants sont le type fourni, puis l'étape appliquée.
+    - "exploitation" / usage (indicateurs / kpi, mais sans doute pas la version CSV, geopackage, geoserver). Les discriminants sont :
+        - le concept support de la métrique qui est souvent un type,
+        - la métrique (linéaire de canalisation, poteau électrique ou technologie d'équipement...) MAIS le plus souvent cette relation concept suffit à fournir beaucoup / toutes les métriques (par des group by différents en dataviz ex. superset),
+        - puis si nécessaire les dimensions (territoire reg/dep/commune qui est une hiérarchie multiple avec AODE, éventuellement métier ex. sur/sous-types de matériau ; mais tout cela est de l'enrichissement) et leurs grains offerts, y compris temporelle (là il peut y avoir des choses à faire : générer des jours ou avoir préparé un historique en SCD2 / DBT snapshot)    - Les enrichissements sont des suppléments de "normalisation" ou (que/et) des requis de "exploitation".
+- Ils peuvent ainsi être classés dans des dossiers : apcom (normalisation, qui est aussi le dossier du projet), (apcom/)(src ou source/)megalis..., (apcom/)(exploitation/)kpi(/kpi1 ex. d'occupation). Cette classification peut être utilement reprise en préfixe de relation SQL / model DBT :
+    - apcom_(src_)osm_supportaerien(_translated,deduped), apcom_std_supportaerien(_unified,deduped), apcom_(use_)kpi_suivioccupation_day
+
+OBSOLETE :
+- TODO nommage plus global et cohérent :
+- des fichiers : models (sample/src__fournisseur_source_typeunifie_version.sql), description de source (fournisseur_nom_source.yml), tests génériques de contrainte de schema ((fdr_?)casdusage_schema.yml), exploitation (perimetre__monexploitation.sql), profilage
+- dossiers : trouver une meillere organisation des fichiers
+- par étape du processus de traitement des données (source, normalized, unified, exploitation...) ?
+- (aidé par vars "source"/"coll1" ? et pour uuid namespace https://docs.getdbt.com/docs/building-a-dbt-project/building-models/using-variables)
+- supportant un seul projet dbt pour une source alimentant plusieurs cas d'usage ?
+- supportant au sein d'un seul projet dbt de la source ET de l'exploitation, par exemple par fournisseur (expert data steward) ou pour des tests ?
+- TODO et selon matérialisation / étapes / téléchargeables (voir plus bas)
+- TODO et selon patterns (donnant tags) permettant analytics metamodel seules dispos dans macros (et non tags)
+
 ### FAQ :
 
 * column "appuiscommunssupp__Gestionnaire__None" does not exist
@@ -290,21 +278,55 @@ Gotchas - DBT :
 - introspect compiled model : https://docs.getdbt.com/reference/dbt-jinja-functions/graph
 - embed yaml conf in .sql : https://docs.getdbt.com/reference/dbt-jinja-functions/fromyaml
 - dbt reuse : macros, packages (get executed first like they would be on their own including .sql files, but can pass different variables through root dbt_project.yml (?) ; TODO Q subpackages ?) https://www.fivetran.com/blog/how-to-re-use-dbt-guiding-rapid-mds-deployments
+- run_query() must be conditioned by execute else Compilation Error 'None' has no attribute 'table' https://docs.getdbt.com/reference/dbt-jinja-functions/execute
 
 Gotchas - Jinja2 :
 - doc https://jinja.palletsprojects.com/en/3.0.x/templates
 - map() filter returns string "<generator object do_map at 0x10bd730>" => add |list https://github.com/pallets/jinja/issues/288
-- change the value of a variable : not possible (and not in the spirit). But if really required, use a dict:  https://stackoverflow.com/questions/9486393/jinja2-change-the-value-of-a-variable-inside-a-loop
+- change the value of a variable (esp. in a loop to find something) : not possible (and not in the spirit). But if really required, use a dict:  https://stackoverflow.com/questions/9486393/jinja2-change-the-value-of-a-variable-inside-a-loop
+- macros accept other macros as arguments https://stackoverflow.com/questions/69079158/can-dbt-macros-accept-other-macros-as-arguments
+- error The object ("{obj}") was used as a dictionary. This capability has been removed from objects of this type. => string utilisée en tant que list
 
 Gotchas - DBeaver :
-- big query (with WITH statement...) throws error : DBeaver uses ";" character AND empty lines as statements separator, so remove these first https://dbeaver.io/forum/viewtopic.php?f=2&t=1687
+- a big query (with WITH statement...) throws error : DBeaver uses ";" character AND empty lines as statements separator, so remove these first https://dbeaver.io/forum/viewtopic.php?f=2&t=1687
+- sometimes, 
 
 Gotchas - PostgreSQL :
 - HINT:  No function matches the given name and argument types. => add explicit type casts to the arguments
-- FAQ postgres blocks & logs says WARNING:  there is already a transaction in progress => terminate all running queries : SELECT pg_cancel_backend(pid) FROM pg_stat_activity WHERE state = 'active' and pid <> pg_backend_pid(); 
+- FAQ postgres blocks & logs says WARNING:  there is already a transaction in progress => try restarting DBeaver (see above), or else terminate all running queries :
+SELECT pg_cancel_backend(pid) FROM pg_stat_activity WHERE state = 'active' and pid <> pg_backend_pid();
+- drop all tables in a schema :
+```sql
+DO $$
+DECLARE
+row record;
+BEGIN
+FOR row IN SELECT * FROM pg_tables WHERE schemaname = 'eaupotable'
+LOOP
+EXECUTE 'DROP TABLE eaupotable.' || quote_ident(row.tablename) || ' CASCADE';
+END LOOP;
+END;
+$$;
+```
 
 Gotchas - FAL :
-- TODO
+- either setup one fal script ex. publish.py on EACH model, or a single script declared at <schema>.yml top level
+- fal run --all (or --select ...) ; else runs no script
+- access dbt context variables beyond what fal provides (ex. target, graph...) :
+    - either using execute_sql() : schema = execute_sql("select '{{ target.schema }}'").values[0][0]
+    - or using fal as a python lib from a .py file
+- run dbt macro : either using execute_sql() (or in dbt model or hook such as on-run-start/end and run it all using fal flow run)
+- peut désormais exécuter aussi avant (--)before, mais pas encore de macro dbt
+- passing arguments :
+  - local and public : as dbt "metas" at the location of the script declaration accessed by
+  - BUT global or secret : as OS env vars accessed through python ( https://github.com/fal-ai/fal/tree/main/examples/slack-example ; rather than env_var("DBT_ENV_SECRET_...") which is only accessible in profiles/packages.yml see https://docs.getdbt.com/reference/dbt-jinja-functions/env_var https://github.com/dbt-labs/dbt-core/issues/2514 )
+- airbyte :)
+
+
+DBT 101 :
+- snapshots : SCD2 that can be updated / run separately
+- exposures : define outside uses in YAML, to publish doc and to run them separately
+- metrics : defined in YAML, notably : time_grains=[day, week, month], dimensions=[plan, country], filters ; pour doc, MAIS ne produisent pas (de relation / model / macro) en elles-mêmes
 
 
 ## Install, build & run
@@ -326,8 +348,8 @@ pip install --upgrade pip wheel setuptools
 pip install dbt-postgres
 
 pip install fal
-
 pip install ckanapi
+pip install requests
 
 # mise à jour :
 #pip install --upgrade dbt-postgres
