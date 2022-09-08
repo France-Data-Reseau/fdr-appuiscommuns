@@ -123,7 +123,9 @@ with unioned as (
 {{ sql2 }}
 ), enriched as (
 -- TODO move to macro used in specific .sql
-select u.*, s."data_owner_id", s."FDR_CAS_USAGE", s."FDR_ROLE", s."FDR_SOURCE_NOM", s."FDR_TARGET", s.org_name as data_owner_label -- TODO org_title
+select
+    u.*, s.last_changed, s."data_owner_id", s.org_name as data_owner_label, -- TODO org_title
+    s."FDR_CAS_USAGE", s."FDR_ROLE", s."FDR_SOURCE_NOM", s."FDR_TARGET"
 from unioned u left join "france-data-reseau".fdr_import_resource s
 on u.import_table = '"{{ target.database }}"."{{ source_row['schema'] }}"."' || s."table" || '"' -- "datastore"."eaupotable"."eaupot_raw_dictionnaire_champs_valeurs_93edagglo"
 where s.status = 'success'

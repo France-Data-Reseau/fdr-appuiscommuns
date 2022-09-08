@@ -146,7 +146,7 @@ all_formats = [ext for f in formats for ext in formats[f]]
 
 # data completing hacks :canalisations_abandonees
 fdr_source_noms = ['canalisations_en_service', 'canalisations_abandonnees', 'reparations',
-                   'perimetre', #'pointlumineux', 'dictionnaire_champs_valeurs'
+                   #'pointlumineux', 'dictionnaire_champs_valeurs'
                    ]
 
 # NOT USED
@@ -348,7 +348,7 @@ def import_resource(resource, import_state):
                 res = ogr2ogr(source_file_path, schema_and_table)
                 step = "ogr2ogr"
 
-            elif format in formats['geojson']: # TODO "perimetre"
+            elif format in formats['geojson']:
                 print('supported format', format, resource['name'])
                 res = ogr2ogr_geojson(source_file_path, schema_and_table)
                 step = "ogr2ogr"
@@ -366,7 +366,11 @@ def import_resource(resource, import_state):
                 step = "unsupp"
 
             if res:
-                messages.append({ "status" : "error", "text" : res })
+                # escaping ex. double quotes : https://stackoverflow.com/questions/18886596/replace-all-quotes-in-a-string-with-escaped-quotes
+                # else unparsable by SQL ::json ERROR: invalid input syntax for type json Détail : Token "0000" is invalid. Où : JSON data, line 1: ...ROR:  date/time field value out of range: \\"0000...
+                #res_escaped = json.dumps(res) # NO same problem ?!
+                res_escaped = res.replace('"', "'")
+                messages.append({ "status" : "error", "text" : res_escaped })
                 #print('ogr2ogr error', res, {i:eval(i) for i in ["schema", "use_case_prefix", FDR_SOURCE_NOM, data_owner_id, source_file_path]})
             else:
                 set_changed(resource, 'insert')
@@ -381,6 +385,7 @@ def import_resource(resource, import_state):
         "FDR_CAS_USAGE" : FDR_CAS_USAGE, "FDR_ROLE" : FDR_ROLE, "FDR_SOURCE_NOM" : FDR_SOURCE_NOM, "FDR_TARGET" : FDR_TARGET,
         "status" : status, "start" : resource_start, "end" : datetime.now().isoformat(),
         "component": "import.py", "step": step, # "subcomponent" or "step" ?
+        "last_changed": build_last_changed_string(resource),
         "resource_id" : resource['id'], "resource_name" : resource['name'],
         "dataset_id" : resource['ds_id'], "dataset_name" : resource['ds_name'], "dataset_title" : resource['ds_title'],
         "org_id" : resource['org_id'], "org_name" : resource['org_name'], "org_title" : resource['org_title'], # label
