@@ -35,7 +35,7 @@ NOT else error each UNION query must have the same number of columns :
 
 {% macro from_csv(source, column_models=[], defined_columns_only=false, complete_columns_with_null=false, wkt_rather_than_geojson=false,
     date_formats=['YYYY-MM-DDTHH24:mi:ss.SSS', 'YYYY/MM/DD HH24:mi:ss.SSS', 'DD/MM/YYYY HH24:mi:ss.SSS'],
-    geo_pattern="geo.*", uuid_pattern="_Id|_Ref", geometry_column=None, def_from_source_mapping={}) %}
+    geo_pattern="geo.*", uuid_pattern="_Id|_Ref", geometry_column=None, def_from_source_mapping={}, debug=true) %}
 
 {% set source = source if source else ref(model.name | replace('_stg', '')) %}
 
@@ -78,6 +78,7 @@ select
         {% if source_col_name not in col_names %}
           NULL::{% if def_col.is_number() %}numeric{% elif modules.re.match(geo_pattern, def_col.name, modules.re.IGNORECASE) %}geometry{% elif def_col.data_type == 'date' or def_col.data_type == 'timestamp' or def_col.data_type == 'timestamp with time zone' %}date{% elif def_col.data_type == 'boolean' %}boolean{% else %}text{% endif %} as {{ adapter.quote(def_col.name) }}
           {# NULL as {{ adapter.quote(def_col.name) }} #}
+          , NULL as {{ adapter.quote(def_col.name + '__src') }}
         {% else %}
 
         {% set source_col = cols | selectattr("name", "eq", source_col_name) | list | first %}
@@ -104,6 +105,11 @@ select
         #}
         {% else %}
           {{ source }}.{{ adapter.quote(source_col.name) }}::text as {{ adapter.quote(def_col.name) }}
+        {% endif %}
+
+
+        {% if debug %} -- TODO only if not ::text'd
+          , {{ source }}.{{ adapter.quote(source_col.name) }}::text as {{ adapter.quote(def_col.name + '__src') }}
         {% endif %}
 
         {% endif %}
