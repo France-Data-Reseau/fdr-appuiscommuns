@@ -29,8 +29,8 @@ select
     "{{ fieldPrefix }}RefEquipement"::uuid,
     {{ schema }}.to_date_or_null("{{ fieldPrefix }}DebutOccupation"::text, 'YYYY/MM/DD HH24:mi:ss.SSS'::text,
           'YYYY-MM-DDTHH24:mi:ss.SSS'::text) as "{{ fieldPrefix }}DebutOccupation", -- 1987 https://www.ietf.org/rfc/rfc3339.txt
-    {{ to_numeric_or_null(fieldPrefix + "Montant", source_model) }} as "{{ fieldPrefix }}Montant",
-    {{ to_numeric_or_null(fieldPrefix + "DureeOccupation", source_model) }} as "{{ fieldPrefix }}DureeOccupation"
+    {{ fdr_francedatareseau.to_numeric_or_null(fieldPrefix + "Montant", source_model) }} as "{{ fieldPrefix }}Montant",
+    {{ fdr_francedatareseau.to_numeric_or_null(fieldPrefix + "DureeOccupation", source_model) }} as "{{ fieldPrefix }}DureeOccupation"
 
     from {{ source_model }}
 

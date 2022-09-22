@@ -3,6 +3,31 @@ name: 'fdr_appuiscommuns'
 version: '0.1'
 profile: 'fdr_appuiscommuns'
 config-version: 2
+#require-dbt-version: '0.21.0'
+
+vars:
+  #limit: 1000
+  FDR_CAS_USAGE: apcom
+  fdr_namespace: 'appuiscommuns.francedatareseau.fr' # access with var(), NOT namespace else jinja's
+  enableOverTime: false # sinon problèmes, voir dans les exploitation/*_ot.sql
+  enableProfiling: false
+  test_extract_suffixes:
+    #- _extract_stg
+    #- _extract
+    - _example_stg
+    - _example
+    #- _definition_stg
+    #- _definition
+  # TODO (level of) enablement of each source
+  # TODO or / and setup/conf() macros
+  # TODO move to global meta project :
+  schemas: ['france-data-reseau', 'appuiscommuns', 'sdirve', 'eaupotable', 'eclairage_public']
+  schema_suffixes: [ '', '_test' ]
+  base_schema: appuiscommuns
+  #use_case_prefix: apcom
+  owner_org: usage-appuis-communs
+  create_views_per_data_owner_relations: ['apcom_kpi_suivioccupation_day', 'apcom_std_supportaerien_unified',
+                                          'apcom_std_equipement_unified', 'apcom_std_occupation_unified', 'apcom_std_suivioccupation_unified']
 
 model-paths: ["models"]
 analysis-paths: ["analyses"]
@@ -16,13 +41,25 @@ clean-targets:
     - "dbt_packages"
     - "logs"
 
+# NB. not run in run-operation
 on-run-start:
-    - '{{create_udfs()}}'
-    
+    #- '{{create_role_schema("appuiscommuns")}}' KO in THIS project, must exist for DBT to run...
+    # so rather in a meta project OR OPERATION AS ADMIN
+    #- '{{create_role_schema("appuiscommuns_test")}}'
+    ##- '{% if not target.name %}{{ create_views() }}{% endif %}'
+    - '{{ fdr_francedatareseau.create_udfs() }}'
+
+
+on-run-end:
+    # TODO or target = "deploy' (copy of prod) ?
+    - '{% if false %}{{ fdr_appuiscommuns.create_views_per_data_owner() }}{% endif %}'
+
 seeds:
+  fdr_francedatareseau:
+    +enabled: false
   fdr_appuiscommuns:
     #+quote_columns: true now true by default in 1.0
-    #appuiscommuns_supportaerien__definition:
+    # seed-specific conf is now in its own source yml files
 
 #sources:
 #  appuiscommuns_osmgeodataminepowersupports:
@@ -31,6 +68,8 @@ seeds:
 #        +enabled: false
 
 models:
+  fdr_francedatareseau:
+    +enabled: false
   # enable incremental schema update : TODO for now KO because doesn't quote field https://github.com/dbt-labs/dbt-core/issues/4423
   #+on_schema_change: "sync_all_columns"
   #fdr_osmgeodatamine_powersupports:
@@ -46,3 +85,7 @@ models:
         #materialized: view NO rather table for performance
     #meta:
       #materialized: table not needed (?)
+
+tests:
+  fdr_francedatareseau:
+    +enabled: false

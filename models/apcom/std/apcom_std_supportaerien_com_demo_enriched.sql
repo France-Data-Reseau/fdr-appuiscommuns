@@ -22,12 +22,12 @@ select
     -- apcomsup :
     {{ dbt_utils.star(ref('apcom_def_supportaerien_definition')) }},
     -- com :
-    {{ dbt_utils.star(source('france-data-reseau', 'georef-france-commune.csv'), except=['_id', '_full_text'], relation_alias='com') }}, -- _id is most probably added by CKAN to all imports
+    {{ dbt_utils.star(source('france-data-reseau', 'georef-france-commune_old.csv'), except=['_id', '_full_text'], relation_alias='com') }}, -- _id is most probably added by CKAN to all imports
     -- demo :
     {{ dbt_utils.star(source('france-data-reseau', 'INSEE communes données démographiques'), except=['_id', '_full_text']) }} -- _id is most probably added by CKAN to all imports
     from {{ source_model }} apcomsup
     CROSS JOIN unnest(apcomsup."apcomsup_com_code__arr") apcomsuparr("apcomsup_com_code__arr_u")
-    left join {{ source('france-data-reseau', 'georef-france-commune.csv') }} com -- LEFT join sinon seulement les lignes qui ont une valeur !! TODO indicateur count pour le vérifier
+    left join {{ source('france-data-reseau', 'georef-france-commune_old.csv') }} com -- LEFT join sinon seulement les lignes qui ont une valeur !! TODO indicateur count pour le vérifier
         on apcomsuparr."apcomsup_com_code__arr_u" = com.com_code
     left join {{ source('france-data-reseau', 'INSEE communes données démographiques') }} demo -- LEFT join sinon seulement les lignes qui ont une valeur !! TODO indicateur count pour le vérifier
         --on apcomsup."com_code" = demo."CODGEO"

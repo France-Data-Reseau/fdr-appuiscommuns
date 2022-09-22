@@ -38,8 +38,8 @@ select
     AVG("{{ fieldPrefix }}HauteurAppui") as "{{ fieldPrefixInd }}HauteurAppui__avg",
     count(*) / MIN("Population") as "{{ fieldPrefixInd }}count_per_inhabitant",
     current_timestamp as updated_at,
-    min(geo_shape) as geo_shape,
-    min(geo_point_2d) as geo_point_2d
+    min(geo_shape_4326) as geo_shape_4326,
+    min(geo_point_4326) as geo_point_4326
     
     from {{ source_model }}
     group by com_code --"{{ fieldPrefix }}fdrcom_insee_id"

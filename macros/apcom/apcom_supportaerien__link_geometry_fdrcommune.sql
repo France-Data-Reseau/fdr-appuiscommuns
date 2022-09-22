@@ -40,8 +40,8 @@ with link_candidates as (
         c.dep_name, --as "fdrdep_nom",
         c.reg_code, --as "fdrreg_insee_id",
         c.reg_name --as "fdrreg_nom"
-    --FROM computed, {{ source('france-data-reseau', 'georef-france-commune.csv') }} c
-    FROM {{ translated_source }}, {{ ref('georef-france-commune.csv') }} c
+    FROM {{ translated_source }}, {{ source('france-data-reseau', 'georef-france-commune_old.csv') }} c
+    {# FROM {{ translated_source }}, {{ ref('georef-france-commune.csv') }} c #}
     --WHERE ST_Contains(ST_GeometryFromText(ST_AsText(c.geo_shape), 4326), {{ translated_source }}.geometry) and c.com_code is not null -- TODO patch source geometry to 4326 SRID
     WHERE ST_Contains(c.geo_shape_4326, {{ translated_source }}.geometry) and c.com_code is not null -- ! removes communes of Nouvelle Calédonie etc.
 

@@ -1,9 +1,0 @@
-version: 2
-
-# requis par profilera
-sources:
-  - name: database_metadata
-    description: les métadonnées de la base
-    schema: information_schema
-    tables:
-      - name: columns

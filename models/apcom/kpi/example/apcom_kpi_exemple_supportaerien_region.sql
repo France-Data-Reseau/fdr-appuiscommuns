@@ -45,5 +45,6 @@ select
     region.geo_shape_4326 -- not useful here, not in CKAN import but in its transformation
     from region_stat
     -- enrich with region : TODO move that to -region-enriched view
-    left join {{ ref('georef-france-region.csv') }} region -- source('france-data-reseau', ; LEFT join sinon seulement les lignes qui ont une valeur !! TODO indicateur count pour le vérifier
+    {# left join {{ ref('georef-france-region.csv') }} region #} -- LEFT join sinon seulement les lignes qui ont une valeur !! TODO indicateur count pour le vérifier
+    left join {{ source('france-data-reseau', 'georef-france-region_old.csv') }} region -- LEFT join sinon seulement les lignes qui ont une valeur !! TODO indicateur count pour le vérifier
         on "reg_code" = region."Code Officiel Région"

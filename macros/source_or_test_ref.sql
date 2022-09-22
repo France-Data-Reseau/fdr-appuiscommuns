@@ -4,7 +4,7 @@ inspired by https://servian.dev/unit-testing-in-dbt-part-1-d0cc20fd189a
 
 {% macro source_or_test_ref(opt_source_name, model_name) %}
 
-      {% if target.name == 'test' %}
+      {% if target.name.startswith('test') %}
 
             {# if test, it's obligatorily a ref, that has been installed by a dbt run in this project,
             to a model provided by this project or one of its deps
@@ -35,6 +35,6 @@ inspired by https://servian.dev/unit-testing-in-dbt-part-1-d0cc20fd189a
       {% endfor %}
 
       {# or a local source TODO and what if remote source ex. ODS communes ? #}
-      {{ return(source(opt_source_name, model_name)) }}
+      {{ return(source(opt_source_name, model_name ~ '_src')) }}
  
 {% endmacro %}

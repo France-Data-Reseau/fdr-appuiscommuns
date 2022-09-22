@@ -29,7 +29,7 @@ select
         except=[fieldPrefix + 'IdEquipement', fieldPrefix + 'RefSupportAerien', fieldPrefix + 'Hauteur']) }},
     "{{ fieldPrefix }}IdEquipement"::uuid, -- TODO Id or support it at parsing and out
     "{{ fieldPrefix }}RefSupportAerien"::uuid,
-    {{ to_numeric_or_null(fieldPrefix + "Hauteur", source_model) }} as "{{ fieldPrefix }}Hauteur"
+    {{ fdr_francedatareseau.to_numeric_or_null(fieldPrefix + "Hauteur", source_model) }} as "{{ fieldPrefix }}Hauteur"
     
     from {{ source_model }}
 

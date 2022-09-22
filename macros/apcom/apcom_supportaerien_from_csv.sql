@@ -32,12 +32,12 @@ select
     ST_GeomFROMText(geometry, 4326) as geometry, -- NOT ::geometry else not the same (srid ?? only visible in binary ::text form : ) therefore except does not work
     -- 0101000000197B8A77DBE0E33F18C25725ECC34740 expected
     -- 0101000020E6100000197B8A77DBE0E33F18C25725ECC34740 actual
-    {{ to_numeric_or_null(fieldPrefix + "HauteurAppui", source_model) }} as "{{ fieldPrefix }}HauteurAppui",
-    {{ to_numeric_or_null(fieldPrefix + "HauteurTotal", source_model) }} as "{{ fieldPrefix }}HauteurTotal",
-    {{ to_numeric_or_null(fieldPrefix + "Azimut", source_model) }} as "{{ fieldPrefix }}Azimut",
+    {{ fdr_francedatareseau.to_numeric_or_null(fieldPrefix + "HauteurAppui", source_model) }} as "{{ fieldPrefix }}HauteurAppui",
+    {{ fdr_francedatareseau.to_numeric_or_null(fieldPrefix + "HauteurTotal", source_model) }} as "{{ fieldPrefix }}HauteurTotal",
+    {{ fdr_francedatareseau.to_numeric_or_null(fieldPrefix + "Azimut", source_model) }} as "{{ fieldPrefix }}Azimut",
     {{ schema }}.to_date_or_null("{{ fieldPrefix }}DateConstruction"::text, 'YYYY/MM/DD HH24:mi:ss.SSS'::text,
       'YYYY-MM-DDTHH24:mi:ss.SSS'::text) as "{{ fieldPrefix }}DateConstruction", -- 1987 https://www.ietf.org/rfc/rfc3339.txt
-    {{ to_numeric_or_null(fieldPrefix + "EffortTransversal", source_model) }} as "{{ fieldPrefix }}EffortTransversal",
+    {{ fdr_francedatareseau.to_numeric_or_null(fieldPrefix + "EffortTransversal", source_model) }} as "{{ fieldPrefix }}EffortTransversal",
     {{ schema }}.to_boolean_or_null("{{ fieldPrefix }}RemonteeAerosout") as "{{ fieldPrefix }}RemonteeAerosout",
     {{ schema }}.to_boolean_or_null("{{ fieldPrefix }}BoisCreosote") as "{{ fieldPrefix }}BoisCreosote",
     {{ schema }}.to_boolean_or_null("{{ fieldPrefix }}BandeauVert") as "{{ fieldPrefix }}BandeauVert"

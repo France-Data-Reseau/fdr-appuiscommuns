@@ -13,11 +13,11 @@ with id_deduped as (
     -- FOR MORE PERFORMANCE, REQUIRES PRIMARY KEY ON ID AND A TABLE SO NOT ON SOURCE
     -- OK : 44s rather than 0,44 if on 1m lines rather than the 200 lines, even on translation view (or source view)
     {#{ dedupe('"' + this.schema + '"."osmgeodatamine_powersupports"', id_fields=['"osm_id"']) }#}
-    {{ dedupe(translated_source_relation, id_fields=['"' + fieldPrefix + 'src_id"']) }}
+    {{ fdr_francedatareseau.dedupe(translated_source_relation, id_fields=['"' + fieldPrefix + 'src_id"']) }}
 
 ), geometry_deduped as (
-    {#{ dedupe('"' + this.schema + '"."osmgeodatamine_powersupports"', id_fields=['"osm_id"']) }#}
-    {{ dedupe('id_deduped', id_fields=['"geometry"']) }}
+    {#{ fdr_francedatareseau.dedupe('"' + this.schema + '"."osmgeodatamine_powersupports"', id_fields=['"osm_id"']) }#}
+    {{ fdr_francedatareseau.dedupe('id_deduped', id_fields=['"geometry"']) }}
 
 ), computed as (
     {{ apcom_supportaerien_translation__computed("geometry_deduped") }}

@@ -13,4 +13,4 @@ TODO generate
   )
 }}
 
-{{ to_csv(ref(model.name[:-4])) }}
+{{ fdr_francedatareseau.to_csv(ref(model.name[:-4])) }}

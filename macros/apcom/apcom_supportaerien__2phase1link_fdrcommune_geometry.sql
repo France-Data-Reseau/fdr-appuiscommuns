@@ -19,8 +19,8 @@ with link_candidates as (
         com.com_name,-- as "fdrcommune__name",
         com.reg_code,-- as "fdregion__insee_id",
         com.reg_name -- as "fdregion__name"
-    --FROM computed, {{ source('france-data-reseau', 'georef-france-commune.csv') }} c
-    FROM {{ translated_source }}, {{ ref('georef-france-commune.csv') }} com
+    FROM {{ translated_source }}, {{ source('france-data-reseau', 'georef-france-commune_old.csv') }} com
+    {# FROM {{ translated_source }}, {{ ref('georef-france-commune.csv') }} com #}
     --WHERE ST_Contains(ST_GeometryFromText(ST_AsText(c.geo_shape), 4326), {{ translated_source }}.geometry) and c.com_code is not null -- TODO patch source geometry to 4326 SRID
     WHERE ST_Contains(com.geo_shape_4326, {{ translated_source }}.geometry) and com.com_code is not null -- ! removes communes of Nouvelle Calédonie etc.
     --having count(*) > 1 -- TODO idea : store only rare duplicates

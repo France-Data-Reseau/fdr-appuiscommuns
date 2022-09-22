@@ -70,7 +70,7 @@ select
         left join {{ ref('apcom_std_supportaerien_fdrcommune_linked') }} supcom -- LEFT join sinon seulement les lignes qui ont une valeur !!
                 on sup."apcomsup_Id" = supcom."apcomsup_Id" -- on sup."com_code" = supcom."com_code"
         -- no need to join also to commune, because the very common fields we require have already been included in the link table :
-        left join {{ source('france-data-reseau', 'georef-france-commune.csv') }} com -- LEFT join sinon seulement les lignes qui ont une valeur !!
+        left join {{ source('france-data-reseau', 'georef-france-commune_old.csv') }} com -- LEFT join sinon seulement les lignes qui ont une valeur !!
                 on supcom.com_code = com.com_code
     -- TODO aode
     -- add reg_code and commune in _enriched NOOO using "specific" enriched : apcom_supportaerien_fdrcommune_linked

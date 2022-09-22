@@ -123,12 +123,6 @@ models:
       tags: [ 'indicators' ] # 'pii' TODO generate from source__type.sql (and rename it)
       meta:
         FDR_ROLE: kpi
-        fal:
-          scripts:
-            before :
-              - scripts/import.py
-            after :
-              - scripts/publish.py
 
 seeds:
   #- name: apcom_supportaerien_definition

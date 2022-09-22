@@ -8,4 +8,4 @@ NB. équipement traverse a plusieurs occupations ex. une par trou ; donc pas rel
   )
 }}
 
-{{ definition(ref('apcom_def_occupation_example_stg')) }}
+{{ fdr_francedatareseau.definition(ref('apcom_def_occupation_example_stg')) }}
