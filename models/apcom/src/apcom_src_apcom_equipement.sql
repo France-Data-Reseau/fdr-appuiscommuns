@@ -1,0 +1,26 @@
+{#
+_translated step
+adds generic fields (else _src_id/priority and id/uuid NULL), replacing the source's if it provided them
+#}
+
+{{
+  config(
+    materialized="view",
+  )
+}}
+
+{% set field_prefix = "apcomeq_" %}
+{% set fdr_namespace = 'equipement.' + var('fdr_namespace') %} -- ?
+
+{% set source_model = ref('apcom_src_apcom_equipement_parsed') %}
+
+with parsed as (
+  select
+    {{ dbt_utils.star(source_model, except=fdr_francedatareseau.list_generic_fields(field_prefix)) }},
+    "{{ field_prefix }}IdEquipement" as {{ field_prefix }}src_id
+  from {{ source_model }}
+
+), with_generic_fields as (
+    {{ fdr_francedatareseau.add_generic_fields('parsed', field_prefix, fdr_namespace, src_priority=None) }}
+)
+select * from with_generic_fields
