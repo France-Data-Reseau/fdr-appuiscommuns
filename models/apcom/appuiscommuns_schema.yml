@@ -203,7 +203,7 @@ seeds:
         apcomsup_StructureAppui: text
         # and many more gthdv2__ are gotten wrong...
         apcomsup_com_code: text # sinon integer et le code 01001 devient 1001
-  - name : apcom_birdz_supportaerien_example
+  - name : apcom_birdz_example
     description: extrait représentatif des données de la source (type) birdz
     config:
       tags: ["sample", "example"]
