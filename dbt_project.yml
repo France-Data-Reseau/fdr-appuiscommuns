@@ -6,23 +6,19 @@ config-version: 2
 #require-dbt-version: '0.21.0'
 
 vars:
-  #limit: 1000
+  # work with a small subset of each source :
+  ##limit: 1000
   FDR_CAS_USAGE: apcom
   fdr_namespace: 'appuiscommuns.francedatareseau.fr' # access with var(), NOT namespace else jinja's
+  # exemples désactivés par défaut :
+  enableArrayLinked: false
   enableOverTime: false # sinon problèmes, voir dans les exploitation/*_ot.sql
   enableProfiling: false
-  test_extract_suffixes:
-    #- _extract_stg
-    #- _extract
-    - _example_stg
-    - _example
-    #- _definition_stg
-    #- _definition
+  # use examples instead of prod data :
+  # NB. may be set to ex. {{ target.name.startswith('example') | as_bool }} NOO will be 'false' not false even though it should not https://docs.getdbt.com/reference/dbt-jinja-functions/as_bool
+  use_example: false
   # TODO (level of) enablement of each source
   # TODO or / and setup/conf() macros
-  # TODO move to global meta project :
-  schemas: ['france-data-reseau', 'appuiscommuns', 'sdirve', 'eaupotable', 'eclairage_public']
-  schema_suffixes: [ '', '_test' ]
   base_schema: appuiscommuns
   #use_case_prefix: apcom
   owner_org: usage-appuis-communs

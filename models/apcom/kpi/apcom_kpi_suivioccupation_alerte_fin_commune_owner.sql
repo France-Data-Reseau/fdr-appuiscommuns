@@ -1,16 +1,13 @@
 {#
-TODO NON
-
-Indicateurs métier d'occupation, par région
-
-Q "view" as in superset ?
-Q rather in Superset ?!
+Indicateurs métier d'occupation, par région - enriched day pairs, ready to be aggregated at whichever geo level as indicators
 
 TODO :
 voir README
 
-params :
+possible macro params :
 - TODO start_date ? end_date ??
+
+du JDB :
 
 du JDB :
 
@@ -22,10 +19,9 @@ Décompte total, segmenté par occupant télécoms , technologie et cheminement
 =>
 exploitant électrique => apcomsup_Gestionnaire
 occupant télécoms => apcomoc_Gestionnaire
-technologie => apcomoc_Technologie
 cheminement => apcomoc_Reseau : DI (distribution), RA (raccordement) repris de gthdv2 ; soit le câble est de collecte (départemental), soit de transport (vers ville), soit DI RA on se rapproche de l'abonné
-
-conventions => label / code dans apcomsuoc_Convention
+technologie => apcomoc_Technologie
+TODO conventions => label / code dans apcomsuoc_Convention
 mise en page / ordonnancement : d'abord le découpage géographique, et après le découpage métier
 
 Suivi de la dépose du cuivre
@@ -38,7 +34,7 @@ Cette représentation pourra être déclinée à différentes échelles géograp
 #}
 
 {% set fieldPrefixSup = 'apcomsup_' %}
-{% set fieldPrefixInd = 'apcomkpiocday_' %}
+{% set fieldPrefixInd = 'apcomkpiocalert_' %}
 
 {{
   config(
@@ -46,21 +42,34 @@ Cette représentation pourra être déclinée à différentes échelles géograp
   )
 }}
 
-{% set source_model = ref('apcom_kpi_suivioccupation_day') %}
+{% set source_model = ref('apcom_kpi_suivioccupation_alerte_fin') %}
 
 with indicators as (
 select
 
-    day,
+    -- AODE :
+    "data_owner_id" as data_owner_id,
+    MIN("data_owner_label") as data_owner_label,
 
+    -- reg & com (outside geo) :
+    com_code,
+    MIN("com_name") as com_name,
     dep_code,
     MIN("dep_name") as dep_name,
+    MIN("epci_code") as epci_code, -- a commune is only in one EPCI
+    MIN("epci_name") as epci_name,
+    MIN("reg_code") as reg_code,
+    MIN("reg_name") as reg_name,
 
     count(*) as "{{ fieldPrefixInd }}all_count",
+
+    COUNT(*) filter (where "{{ fieldPrefixInd }}expire" = True) as "{{ fieldPrefixInd }}expire",
+    COUNT(*) filter (where "{{ fieldPrefixInd }}expire_avant_1_an" = True) as "{{ fieldPrefixInd }}expire_avant_1_an",
+    COUNT(*) filter (where "{{ fieldPrefixInd }}expire_avant_3_ans" = True) as "{{ fieldPrefixInd }}expire_avant_3_ans",
+    COUNT(*) filter (where "{{ fieldPrefixInd }}expire_avant_5_ans" = True) as "{{ fieldPrefixInd }}expire_avant_5_ans",
+
     COUNT(*) filter (where "apcomoc_Technologie" = 'CUIVRE') as "{{ fieldPrefixInd }}cuivre_count",
     COUNT(*) filter (where "apcomoc_Technologie" = 'FIBRE') as "{{ fieldPrefixInd }}fibre_count",
-
-    -- TODO AODE as pivot ?
 
     {{ dbt_utils.pivot('"' + fieldPrefixSup + 'Materiau"', dbt_utils.get_column_values(ref('apcom_std_supportaerien_unified'),
         '"' + fieldPrefixSup + 'Materiau"'), prefix=fieldPrefixSup + 'Materiau__') }},
@@ -75,10 +84,13 @@ select
 
     {{ dbt_utils.pivot('"apcomsuoc_Convention"', dbt_utils.get_column_values(ref('apcom_std_suivioccupation_unified'),
         '"apcomsuoc_Convention"'), prefix='apcomsuoc_Convention') }}
-    
-    from {{ source_model }} apcom_occupation_day_enriched
-    group by day, dep_code
+
+    from {{ source_model }}
+    --where "apcomsuoc_FinOccupation" > now() -- else get too old alerts NOO would remove those that missed the date !
+    group by
+        data_owner_id, com_code, dep_code -- in case a commune is in 2 departements
 )
+
 select
     indicators.*
     --,

@@ -1,6 +1,22 @@
 {#
+PAS UTILISE sauf dans des exemples désactivés, gardé à titre d'exemple
+
+Liaison aux communes des données normalisées de toutes les sources de type appuiscommuns.supportaerien,
+en créant la table de ces supports enrichis ("in place") de leurs communes (en colonne ARRAY, indexée pour exploitation
+performante).
+
+Une approche davantage dénormalisée est plus standard en base de données relationnelle (mais pas en NoSQL), i.e.
+avec une table intermédiaire pour la relation n-n qui d'ailleurs amène beaucoup moins de données (et d'index)
+dupliquées. Qu'avec les seuls champs de la définition ça prenne 2 fois moins de temps le confirme.
+
 1 phase n-n reconciliation / linking - produce ARRAY of linked object ids from subject
-Partie générique - link_geometry_fdrcommune, utilisé dans apcom_supportaerien
+Partie générique - link_geometry_fdrcommune
+utilisé dans apcom_supportaerien _exemple_commune_array_linked et de là dans _exemple_commune_array_demo_enriches et kpi_exemple
+
+Produces / computes (so materialized as table)
+865-664s on apcomsup _unified TODO using index
+BUT manually query is only 10s using indexes (on commune (and translated_source) geometry, id_field),
+so the time is actually spent on creating the table i.e. indexes (array gist ?!), or even 330 fields (?)
 
 TODO quite generic macro, still more
 
@@ -11,7 +27,7 @@ parameters :
 - field_min_cast_types : type of fields that need to be cast back from text after min() step outside id_field
 #}
 
-{% macro apcom_supportaerien_translation__link_geometry_fdrcommune(translated_source, id_field, fields, order_by=None) %}
+{% macro apcom_supportaerien_array_link_geometry_commune(translated_source, id_field, fields, order_by=None) %}
 
 {% set field_min_cast_types = { "geometry" : "geometry" } %}
 
@@ -40,10 +56,10 @@ with link_candidates as (
         c.dep_name, --as "fdrdep_nom",
         c.reg_code, --as "fdrreg_insee_id",
         c.reg_name --as "fdrreg_nom"
-    FROM {{ translated_source }}, {{ source('france-data-reseau', 'georef-france-commune_old.csv') }} c
+    FROM {{ translated_source }}, {{ source('france-data-reseau', 'fdr_src_communes_ods') }} c
     {# FROM {{ translated_source }}, {{ ref('georef-france-commune.csv') }} c #}
     --WHERE ST_Contains(ST_GeometryFromText(ST_AsText(c.geo_shape), 4326), {{ translated_source }}.geometry) and c.com_code is not null -- TODO patch source geometry to 4326 SRID
-    WHERE ST_Contains(c.geo_shape_4326, {{ translated_source }}.geometry) and c.com_code is not null -- ! removes communes of Nouvelle Calédonie etc.
+    WHERE ST_Contains(c.geometry, {{ translated_source }}.geometry) and c.com_code is not null -- not worse perfs (5s) ; OLD ! removes communes of Nouvelle Calédonie etc.
 
 ), link_candidate_array as (
     -- no performance change, else 2 array_agg would gave to be inlined ;

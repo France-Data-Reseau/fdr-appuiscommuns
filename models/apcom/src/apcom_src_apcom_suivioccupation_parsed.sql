@@ -1,6 +1,8 @@
 {#
 Generically parsed.
 
+TODO change either FDR_SOURCE_NOM or this file's name
+
 No further _translated step, because nothing to do : generic fields can't be added since suivioccupation don't have
 a source-provided id to use as _src_id (though we might compute one ex. from its start date)
 #}

@@ -1,4 +1,6 @@
 {#
+OBSOLETE utilisé dans une partie commentée de osm supportaerien _deduped, utilise array_link (déconseillé)
+
 Normalisation vers le modèle de données du cas d'usage "appuiscommuns" des données de type canalisation de la source "osmgeodatamine_powersupports"
 Partie générique
 #}
@@ -12,7 +14,7 @@ with link_geometry_fdrcommune as (
     {%- set fields = adapter.get_columns_in_relation(ref(translated_source_model_name)) | map(attribute="name") | list -%}-- BEWARE without | list it stays a generator that can only be iterated once
     {#% set cols = dbt_utils.star(ref(translated_source_model_name), except=[
           sourceFieldPrefix + "com_code"]).split(', ') %#}
-    {{ apcom_supportaerien_translation__link_geometry_fdrcommune(ref(translated_source_model_name), id_field=fieldPrefix+"Id", fields=fields) }}
+    {{ apcom_supportaerien_array_link_geometry_commune(ref(translated_source_model_name), id_field=fieldPrefix+"Id", fields=fields) }}
 
 
 {# NO RATHER dropping given commune ids and getting them from geometry
@@ -26,7 +28,7 @@ with link_geometry_fdrcommune as (
         -- TODO & _nom ?
         
     from computed
-        left join {{ source('france-data-reseau', 'georef-france-commune_old.csv') }} c -- LEFT join sinon seulement les lignes qui ont une valeur !! TODO indicateur count pour le vérifier
+        left join {{ source('france-data-reseau', 'fdr_src_communes_ods') }} c -- LEFT join sinon seulement les lignes qui ont une valeur !! TODO indicateur count pour le vérifier
         on computed."{{ sourceFieldPrefix }}com_code" = c.com_code
 
 & TODO LATER 2 phase dedup : phase 2 that joins on (approved / decided) link_geometry_fdrcommune :

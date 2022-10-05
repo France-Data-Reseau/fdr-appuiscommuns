@@ -97,7 +97,7 @@ models:
         tests:
           - not_null
           - relationships:
-              to: source("france-data-reseau", "georef-france-commune.csv")
+              to: source("france-data-reseau", "fdr_src_communes_ods")
               field: '"com_code"'
               #description: 'zzztest' # KO macro 'dbt_macro__test_relationships' takes no keyword argument 'description'
               config:
@@ -124,6 +124,9 @@ models:
       meta:
         FDR_ROLE: kpi
 
+# seeds :
+# for example data, avoid using column_types to retype columns, rather fill all values in the first line
+# to help DBT autodetection
 seeds:
   #- name: apcom_supportaerien_definition
   #  description: définition formelle du type supportaerien (pour l'instant copié manuellement depuis le Gitbook, à terme pourrait générer ce dernier voire un métamodèle guidant l'outillage)
@@ -186,7 +189,7 @@ seeds:
     description: extrait représentatif des données de la source (type) megalis aat_gthdv2
     config:
       tags: [ "sample", "example" ]
-      #column_types: TODO
+      #column_types: RATHER by filling all of the first line's column values
   - name: apcom_aat_gthdv2_supportaerien_expected
     description: attendu de la normalisation megalis aat_gthdv2
     config:

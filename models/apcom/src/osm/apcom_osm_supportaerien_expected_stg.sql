@@ -15,4 +15,5 @@ TODO generate
   )
 }}
 
-{{ from_csv(ref(model.name[:-4]), [ref('apcom_def_supportaerien_definition'), ref('apcom_osm_supportaerien_example')], wkt_rather_than_geojson=true) }}
+{{ fdr_francedatareseau.from_csv(ref(model.name[:-4]), [ref('apcom_def_supportaerien_definition'), ref('apcom_osm_supportaerien_example')], wkt_rather_than_geojson=true) }}
+{# , best_geometry_columns=['geom', 'geometrie'], target_geometry_column_name='geometry' #}

@@ -1,4 +1,7 @@
 {#
+Actually dedup is done in _translated because before _computed
+If with additional index on _2154 and _translated not a table, both still take less time
+
 Normalisation vers le modèle de données du cas d'usage "appuiscommuns" des données de type canalisation de la source "osmgeodatamine_powersupports"
 Partie générique
 
@@ -6,6 +9,13 @@ is a table only if has reconciliation
 69s with its own indexes (23s without) ; 40s
 
 applies exact dedup by src_id and geometry
+
+  config(
+    materialized="table",
+    indexes=[{'columns': ['"' + fieldPrefix + 'IdSupportAerien"']},
+      {'columns': order_by_fields},
+      {'columns': ['geometry'], 'type': 'gist'},
+      {'columns': ['geometry_2154'], 'type': 'gist'},]
 #}
 
 {% set fieldPrefix = "apcomsup_" %}
@@ -13,38 +23,29 @@ applies exact dedup by src_id and geometry
 
 {{
   config(
-    materialized="table",
-    indexes=[{'columns': ['"' + fieldPrefix + 'Id"']},
-      {'columns': order_by_fields},
-      {'columns': ['geometry'], 'type': 'gist'},]
+    materialized="view",
   )
 }}
 
 {% set source_model = ref("apcom_osm_supportaerien_translated") %}
 
-with reconciled as (
+with translated as (
+    select * from {{ source_model }}
 
+), id_deduped as (
+    -- id deduplication :
+    -- OR LATER ON normalized id
+    -- FOR MORE PERFORMANCE, REQUIRES PRIMARY KEY ON ID AND A TABLE SO NOT ON SOURCE
+    -- OK : 44s rather than 0,44 if on 1m lines rather than the 200 lines, even on translation view (or source view)
+    {#{ dedupe('"' + this.schema + '"."osmgeodatamine_powersupports"', id_fields=['"osm_id"']) }#}
+    {{ fdr_francedatareseau.dedupe("translated", id_fields=['"' + fieldPrefix + 'src_id"']) }}
+
+), geometry_deduped as (
+    {#{ fdr_francedatareseau.dedupe('"' + this.schema + '"."osmgeodatamine_powersupports"', id_fields=['"osm_id"']) }#}
+    {{ fdr_francedatareseau.dedupe('id_deduped', id_fields=['"geometry"']) }}
+
+)
 select
     {{ dbt_utils.star(source_model, except=["apcomsup_com_code", "apcomsup_com_name"]) }}
-from {{ source_model }}
+from geometry_deduped
 order by "{{ order_by_fields | join('" asc, "') }}" asc
-
-
-{# NO else ARRAY fields that can't be added (cast(null as ARRAY) syntax error in _definition when unioning in support_aerien later
-{{ apcom_supportaerien_translated__reconciled("apcom_osm_supportaerien_translated") }}
-#}
-
-{#
-), commune_linked as (
-    -- reconciliation :
-    -- RATHER doing it after translation, because allows to do it all in one go,
-    -- moreover, commune is not necessary for other translation processings (dedup...).
-    -- NB. couldn't be done earlier because reconciliation to communes requires a geometry field, so can't be done on the source which hasn't it (and is more efficient being in a table)
-    {%- set fields = adapter.get_columns_in_relation(ref('apcom_osm_supportaerien_translated')) | map(attribute="column") | list -%}-- BEWARE without | list it stays a generator that can only be iterated once
-    {#% set cols = dbt_utils.star(sourceModel, except=[fieldPrefix + "fdrcommune__insee_id",
-      fieldPrefix + "commune__insee_id", "fdrcommune__insee_id"]).split(',') %}
-    {{ apcom_supportaerien_translation__link_geometry_fdrcommune("all", id_field="apcomsup_Id", fields=fields) }#+}
-#}
-)
-
-select * from reconciled

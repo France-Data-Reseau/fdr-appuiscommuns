@@ -50,18 +50,27 @@ Cette représentation pourra être déclinée à différentes échelles géograp
 
 with indicators as (
 select
-
     day,
 
+    -- AODE :
+    "data_owner_id" as data_owner_id,
+    MIN("data_owner_label") as data_owner_label,
+
+    -- reg & com (outside geo) :
+    com_code,
+    MIN("com_name") as com_name,
     dep_code,
     MIN("dep_name") as dep_name,
+    MIN("epci_code") as epci_code, -- a commune is only in one EPCI
+    MIN("epci_name") as epci_name,
+    MIN("reg_code") as reg_code,
+    MIN("reg_name") as reg_name,
 
     count(*) as "{{ fieldPrefixInd }}all_count",
     COUNT(*) filter (where "apcomoc_Technologie" = 'CUIVRE') as "{{ fieldPrefixInd }}cuivre_count",
     COUNT(*) filter (where "apcomoc_Technologie" = 'FIBRE') as "{{ fieldPrefixInd }}fibre_count",
 
-    -- TODO AODE as pivot ?
-
+    -- pivots : get column values NOT from source_model else 30s instead of 3s each
     {{ dbt_utils.pivot('"' + fieldPrefixSup + 'Materiau"', dbt_utils.get_column_values(ref('apcom_std_supportaerien_unified'),
         '"' + fieldPrefixSup + 'Materiau"'), prefix=fieldPrefixSup + 'Materiau__') }},
     {{ dbt_utils.pivot('"apcomsup_Gestionnaire"', dbt_utils.get_column_values(ref('apcom_std_supportaerien_unified'),
@@ -77,7 +86,9 @@ select
         '"apcomsuoc_Convention"'), prefix='apcomsuoc_Convention') }}
     
     from {{ source_model }} apcom_occupation_day_enriched
-    group by day, dep_code
+    group by
+        day,
+        data_owner_id, com_code, dep_code -- in case a commune is in 2 departements
 )
 select
     indicators.*

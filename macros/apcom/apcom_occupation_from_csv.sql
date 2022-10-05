@@ -24,8 +24,8 @@ TODO can't be replaced by from_csv because is the actual definition, BUT could b
 select
     {{ dbt_utils.star(def_model,
         except=[fieldPrefix + 'IdOccupation', fieldPrefix + 'RefEquipement']) }},
-    "{{ fieldPrefix }}IdOccupation"::uuid, -- TODO Id or support it at parsing and out
-    "{{ fieldPrefix }}RefEquipement"::uuid
+    "{{ fieldPrefix }}IdOccupation", --::uuid, -- TODO Id or support it at parsing and out
+    "{{ fieldPrefix }}RefEquipement" --::uuid
 
     from {{ source_model }}
 

@@ -1,12 +1,14 @@
 {#
+_translated step
 Normalisation vers le modèle de données du cas d'usage "appuiscommuns" des données de type supportaerien de la source "osmgeodatamine_powersupports"
 Partie spécifique à la source
 
 make it a table IF needed for further processing before
 
-171s with deduped_computed and indexed on Id & geometry
+OLD 171s with deduped_computed and indexed on Id & geometry
 
-    indexes=[{'columns': ['"' + fieldPrefix + 'Id"']},
+    materialized="table",
+    indexes=[{'columns': ['"' + fieldPrefix + 'IdSupportAerien"']},
       {'columns': ['geometry'], 'type': 'gist'},]
 #}
 
@@ -16,18 +18,19 @@ make it a table IF needed for further processing before
 
 {{
   config(
-    materialized="table",
+    materialized="view",
   )
 }}
 
 {% set src_priority = "0" %}
-{% set sourceModel = source_or_test_ref('appuiscommuns', 'apcom_osm_supportaerien') %} -- TODO sourceOrTestRef(
+{% set sourceModel = ref('apcom_src_apcom_osm_parsed') if not var('use_example') else ref('apcom_osm_supportaerien_example_stg') %}
 
 -- only one source, otherwise dedup would have required to index src_name & priority so would have to be in another, downstream model
-with translated as (
-    {{ osm_powsupp__apcom_supportaerien(sourceModel, src_priority) }}
-), deduped_computed as (
-    -- id & geo exact dedup WITHIN geodatamine version of OSM data
-    {{ apcom_supportaerien__deduped_computed('translated', fieldPrefix) }}
+with imported as (
+    select * from {{ sourceModel }}
+
+), translated as (
+    {{ osm_powsupp__apcom_supportaerien('imported', src_priority) }}
+
 )
-select * from deduped_computed
+select * from translated

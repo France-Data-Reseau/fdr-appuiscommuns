@@ -27,7 +27,7 @@ returns merged lines of data with :
 
 -- TODO apcom_supportaerien_translation__dup_geometry : first step producing only duplicates,
 -- that can be merged according to the expert choices afterwards (rather than static rules)
-{% macro apcom_supportaerien_translation__dedupe_geometry(normalized_source_model_name, id_field, order_by_fields, fields, criteria) %}
+{% macro apcom_supportaerien_translation__dedupe_geometry(dedupe_candidates_model_name, normalized_source_model_name, id_field, order_by_fields, fields, criteria) %}
 
 {% set fieldPrefix = 'apcomsup_' %} -- for debug purpose only
 
@@ -37,9 +37,10 @@ returns merged lines of data with :
 
 {% set pair_order_fields = [] %}
 
--- apcom_supportaerien_translation__dup_geometry :
-
+-- apcom_supportaerien_dedupe_geometry_candidates :
 with link_candidates as (
+select * from {{ ref(dedupe_candidates_model_name) }}
+{#
     -- 1. Let's match data with itself and build the pairs where the criteria is met,
     -- but list each pair only once / on one side by using an ordering :
     -- xs on 1m lines
@@ -94,7 +95,14 @@ with link_candidates as (
     ---- earlier."{{ src_name_field }}" asc, earlier."{{ src_id_field }}" asc,
     ---- later."{{ src_name_field }}" asc, later."{{ src_id_field }}" asc
 
+#}
 ), filtered as (
+    {% for order_by_field in order_by_fields %}
+      -- {{ pair_order_fields.append("earlier" ~ order_by_field) }}
+    {% endfor %}
+    {% for order_by_field in order_by_fields %}
+      -- {{ pair_order_fields.append("later" ~ order_by_field) }}
+    {% endfor %}
 
   -- 2. remove lines where later / right part has already been mentioned before as earlier / left part
   -- i.e. previous groups will already have included them :

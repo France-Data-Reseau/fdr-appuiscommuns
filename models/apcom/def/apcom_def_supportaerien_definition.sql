@@ -14,10 +14,4 @@ Materialized as view because of these uses.
   )
 }}
 
-{% set source_model = ref('apcom_def_supportaerien_example_stg') %}
-
-select
-    {{ dbt_utils.star(source_model) }}
-    
-    from {{ source_model }} -- TODO raw_
-    limit 0
+{{ fdr_francedatareseau.definition(ref('apcom_def_supportaerien_example_stg')) }}

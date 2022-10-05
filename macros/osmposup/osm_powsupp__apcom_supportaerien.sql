@@ -3,15 +3,18 @@ Normalisation vers le modèle de données du cas d'usage "appuiscommuns" des don
 de la source "osmgeodatamine_powersupports"
 Partie spécifique à la source
 
+Inclus computed (partagé en macro), ainsi qu'add_generic_fields()
+
 - OU à chaque fois pour plus de concision et lisibilité select * (les champs en trop sont alors enlevés à la fin par la __definition) ?
 #}
 
-{% macro osm_powsupp__apcom_supportaerien(source_relation, src_priority=None) %}
+{% macro osm_powsupp__apcom_supportaerien(parsed_source_relation, src_priority=None) %}
 
 {% set containerUrl = 'http://' + 'datalake.francedatareseau.fr' %}
 {% set typeUrlPrefix = containerUrl + '/dc/type/' %}
 {% set type = 'appuiscommuns_supportaerien_osmgeodatamine_powersupports_extract' %} -- spécifique à la source ; _2021 ? from this file ? prefix:typeName ?
 {% set type = 'appuiscommuns_supportaerien' %} -- _2021 ? from this file ? prefix:typeName ?
+{% set fdr_namespace = 'supportaerien.' + var('fdr_namespace') %} -- ?
 {% set ns = 'supportaerien.appuiscommuns.francedatareseau.fr' %} -- ?
 {% set typeName = 'SupportAerien' %}
 {% set sourcePrefix = 'osmposup' %} -- ?
@@ -22,23 +25,29 @@ Partie spécifique à la source
 {% set fieldPrefix = prefix + '_' %}
 {% set idUrlPrefix = typeUrlPrefix + type + '/' %}
 
-with source as (
+with import_parsed as (
 
-    select * from {{ source_relation }}
+    select * from {{ parsed_source_relation }}
     {% if var('limit', 0) > 0 %}
     LIMIT {{ var('limit') }}
     {% endif %}
 
-),
+{#
+rename and generic parsing is rather done
+- in specific _from_csv
+- in generic from_csv (called by fdr_source_union), which is guided by the previous one
+#}
 
-renamed as (
+), renamed as (
 
     select
-        '{{ source_relation }}' as "{{ fieldPrefix }}src_name", -- source name (else won't have it anymore once unified with other sources)
+        *, -- TODO if test to debug / find conversion root error, else source('france-data-reseau', 'fdr_def_generic_fields_definition')
+
         --id as "{{ fieldPrefix }}src_index", -- index in source
         "osm_id"::text as "{{ fieldPrefix }}src_id", -- source own id
-        "X"::numeric, -- as "{{ sourceFieldPrefix }}x",
-        "Y"::numeric, -- as "{{ sourceFieldPrefix }}x",
+        "osm_id"::text as "{{ fieldPrefix }}IdSupportAerien", -- source own id
+        "X"::numeric as "{{ sourceFieldPrefix }}X",
+        "Y"::numeric as "{{ sourceFieldPrefix }}Y",
         "utility"::text as "{{ sourceFieldPrefix }}utility", -- power
         "nature"::text as "{{ sourceFieldPrefix }}nature", -- pole, tower TODO dict conv
         "operator"::text as "{{ fieldPrefix }}Gestionnaire",
@@ -56,36 +65,38 @@ renamed as (
         "com_insee"::text as "{{ sourceFieldPrefix }}com_code", -- NOT apcomsup_com_code because is OSM's version (which has been computed by geodatamine)
         "com_nom"::text as "{{ sourceFieldPrefix }}com_name" -- NOT apcomsup because is OSM's version (which has been computed by geodatamine)
 
-    from source
+    from import_parsed
 
-),
-
-parsed as (
+), specific_parsed as (
 
     select
         *,
-        {% if src_priority %}'{{ src_priority }}' || {% endif %}'{{ src_name }}' as "{{ fieldPrefix }}src_priority",  -- 0 is highest, then 10, 100, 1000... src_name added to differenciate
-        uuid_generate_v5(uuid_generate_v5(uuid_ns_dns(), '{{ ns }}}}'), "{{ fieldPrefix }}src_id") as "{{ fieldPrefix }}Id",
-        ST_GeomFROMText('POINT(' || cast("X" as text) || ' ' || cast("Y" as text) || ')', 4326) as geometry, -- OU prefix ? forme ?? ou /et "Geom" ? TODO LATER s'en servir pour réconcilier si < 5m
+        --uuid_generate_v5(uuid_generate_v5(uuid_ns_dns(), '{{ ns }}}}'), "{{ fieldPrefix }}src_id") as "{{ fieldPrefix }}IdSupportAerien", -- NOO rather in add_generic_fields()
+        ST_GeomFROMText('POINT(' || cast("{{ sourceFieldPrefix }}X" as text) || ' ' || cast("{{ sourceFieldPrefix }}Y" as text) || ')', 4326) as geometry, -- OU prefix ? forme ?? ou /et "Geom" ? TODO LATER s'en servir pour réconcilier si < 5m
         {{ schema }}.to_numeric_or_null("{{ fieldPrefix }}HauteurAppui__s") as "{{ fieldPrefix }}HauteurAppui" -- TODO Hauteur ! hauteur ? __m ??
 
     from renamed
 
-),
-
-translated as (
+), translated as (
 
     select
-        parsed.*,
+        specific_parsed.*,
+        --ST_TRANSFORM(geometry, 2154) as geometry_2154, -- TODO LATER preferred projection of data (data_owner_id's, or perimetre data_owner_id's or commune's but then have to reconcile with them first ? in from_csv ?!?)
+
         mat."Valeur" as "{{ fieldPrefix }}Materiau" -- TODO dict conv
 
-    from parsed
+    from specific_parsed
         left join {{ ref('l_appuisaeriens_materiau_osmgeodatamine') }} mat -- LEFT join sinon seulement les lignes qui ont une valeur !! TODO indicateur count pour le vérifier
-            on parsed.{{ sourceFieldPrefix }}material = mat.{{ sourceFieldPrefix }}material
-            
-    
+            on specific_parsed.{{ sourceFieldPrefix }}material = mat.{{ sourceFieldPrefix }}material
+
+), computed as (
+    {{ apcom_supportaerien_translation__computed('translated') }}
+
+), with_generic_fields as (
+    {{ fdr_francedatareseau.add_generic_fields('computed', fieldPrefix, fdr_namespace, src_priority) }}
+
 )
 
-select * from translated
+select * from with_generic_fields
 
 {% endmacro %}

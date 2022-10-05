@@ -27,8 +27,8 @@ TODO can't be replaced by from_csv because is the actual definition, BUT could b
 select
     {{ dbt_utils.star(def_model,
         except=[fieldPrefix + 'IdEquipement', fieldPrefix + 'RefSupportAerien', fieldPrefix + 'Hauteur']) }},
-    "{{ fieldPrefix }}IdEquipement"::uuid, -- TODO Id or support it at parsing and out
-    "{{ fieldPrefix }}RefSupportAerien"::uuid,
+    "{{ fieldPrefix }}IdEquipement", --::uuid, -- TODO Id or support it at parsing and out
+    "{{ fieldPrefix }}RefSupportAerien", --::uuid,
     {{ fdr_francedatareseau.to_numeric_or_null(fieldPrefix + "Hauteur", source_model) }} as "{{ fieldPrefix }}Hauteur"
     
     from {{ source_model }}

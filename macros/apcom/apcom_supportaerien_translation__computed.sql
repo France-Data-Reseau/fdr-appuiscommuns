@@ -1,6 +1,6 @@
 {#
 Normalisation vers le modèle de données du cas d'usage "appuiscommuns" des données de type canalisation de la source "osmgeodatamine_powersupports"
-Partie générique - computed, utilisé dans osm_powsupp__apcom_supportaerien_translated
+Partie générique - computed, utilisé dans osm et birdz _translated
 
 parameters :
 - mapping_model_suffix : if set to ex. "osm" allows to use ex. l_pointaccueil_nature__osm rather than l_pointaccueil_nature

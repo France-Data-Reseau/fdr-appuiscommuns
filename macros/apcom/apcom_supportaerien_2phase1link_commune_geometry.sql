@@ -1,8 +1,12 @@
 {#
 2 phase n-n reconciliation / linking - phase 1 produce linked object ids from subject
+
+Produces the table (materialized because computes) of the n-n relationship between apcomsup and commune
+Used in _commune_linked
+120s on apcomsup _unified TODO using no index
 #}
 
-{% macro apcom_supportaerien__2phase1link_fdrcommune_geometry(translated_source, id_field, fields, order_by=None) %}
+{% macro apcom_supportaerien_2phase1link_commune_geometry(translated_source, id_field, fields, order_by=None) %}
 
 {% set field_min_cast_types = { "geometry" : "geometry" } %}
 
@@ -19,10 +23,10 @@ with link_candidates as (
         com.com_name,-- as "fdrcommune__name",
         com.reg_code,-- as "fdregion__insee_id",
         com.reg_name -- as "fdregion__name"
-    FROM {{ translated_source }}, {{ source('france-data-reseau', 'georef-france-commune_old.csv') }} com
+    FROM {{ translated_source }}, {{ source('france-data-reseau', 'fdr_src_communes_ods') }} com
     {# FROM {{ translated_source }}, {{ ref('georef-france-commune.csv') }} com #}
     --WHERE ST_Contains(ST_GeometryFromText(ST_AsText(c.geo_shape), 4326), {{ translated_source }}.geometry) and c.com_code is not null -- TODO patch source geometry to 4326 SRID
-    WHERE ST_Contains(com.geo_shape_4326, {{ translated_source }}.geometry) and com.com_code is not null -- ! removes communes of Nouvelle Calédonie etc.
+    WHERE ST_Contains(com.geometry, {{ translated_source }}.geometry) -- and com.com_code is not null -- NOO not needed and bad perfs ; OLD ! removes communes of Nouvelle Calédonie etc.
     --having count(*) > 1 -- TODO idea : store only rare duplicates
     {% if order_by %})
       order by {{ order_by }} -- "{{ fieldPrefix }}Id", "fdrcommune__insee_id"

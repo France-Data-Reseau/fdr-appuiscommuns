@@ -3,14 +3,19 @@ version: 2
 sources:
   - name: "appuiscommuns" # TODO _source or one file per folder / source 
     description: les données externes immportées dans appuiscommuns (par CKAN IHM ou API, ou connexion SQL ex. Airbyte ELT)
-    schema: "appuiscommuns"
+    schema: "{{ target.schema }}"
     #meta: {<dictionary>}
     #tags: [<string>]
     tables:
       - name: "apcom_osm_supportaerien_src" # "Supports aériens OpenStreetMap" ; TODO change, rather a view union of all name-matching tables / views, themselves TODO _ckan
-      - name: "apcom_def_supportaerien_src"
       - name: "apcom_birdz_supportaerien_src"
       - name: "apcom_aat_gthdv2_supportaerien_src"
-      - name: "apcom_def_equipement_src"
-      - name: "apcom_def_occupation_src"
-      - name: "apcom_def_suivioccupation_src"
+  - name: "france-data-reseau" # TODO _source or one file per folder / source
+    description: les données externes immportées dans appuiscommuns (par CKAN IHM ou API, ou connexion SQL ex. Airbyte ELT)
+    schema: "france-data-reseau{{ '' if target.name == 'prod' else '_' ~ target.name }}"
+    #meta: {<dictionary>}
+    #tags: [<string>]
+    tables:
+      - name: "fdr_src_communes_ods"
+      - name: "fdr_src_regions_ods"
+      - name: "fdr_src_demographie_communes_2014_typed"

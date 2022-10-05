@@ -25,11 +25,12 @@ TODO can't be replaced by from_csv because is the actual definition, BUT could b
 
 select
     {{ dbt_utils.star(def_model,
-        except=[fieldPrefix + 'Id', 'geometry', fieldPrefix + 'HauteurAppui', fieldPrefix + 'HauteurTotal',
+        except=[fieldPrefix + 'IdSupportAerien', 'geometry', fieldPrefix + 'HauteurAppui', fieldPrefix + 'HauteurTotal',
         fieldPrefix + 'Azimut', fieldPrefix + 'DateConstruction', fieldPrefix + 'EffortTransversal',
         fieldPrefix + 'RemonteeAerosout', fieldPrefix + 'BoisCreosote', fieldPrefix + 'BandeauVert']) }},
-    "{{ fieldPrefix }}Id"::uuid,
-    ST_GeomFROMText(geometry, 4326) as geometry, -- NOT ::geometry else not the same (srid ?? only visible in binary ::text form : ) therefore except does not work
+
+    "{{ fieldPrefix }}IdSupportAerien", --::uuid,
+    ST_GeomFROMText("geometry", 4326) as "geometry", -- NOT ::geometry else not the same (srid ?? only visible in binary ::text form : ) therefore except does not work
     -- 0101000000197B8A77DBE0E33F18C25725ECC34740 expected
     -- 0101000020E6100000197B8A77DBE0E33F18C25725ECC34740 actual
     {{ fdr_francedatareseau.to_numeric_or_null(fieldPrefix + "HauteurAppui", source_model) }} as "{{ fieldPrefix }}HauteurAppui",

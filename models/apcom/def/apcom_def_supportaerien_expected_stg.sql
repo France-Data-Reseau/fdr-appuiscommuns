@@ -25,8 +25,8 @@ TODO can't be replaced by from_csv because is the actual definition, BUT could b
 
 select
     {{ dbt_utils.star(ref('apcom_def_supportaerien_definition'),
-        except=[fieldPrefix + 'Id', 'geometry', fieldPrefix + 'HauteurAppui']) }},
-    "{{ fieldPrefix }}Id"::uuid,
+        except=[fieldPrefix + 'IdSupportAerien', 'geometry', fieldPrefix + 'HauteurAppui']) }},
+    "{{ fieldPrefix }}IdSupportAerien", --::uuid,
     "{{ fieldPrefix }}HauteurAppui"::numeric,
     ST_GeomFROMText(geometry, 4326) as geometry -- NOT ::geometry else not the same (srid ?? only visible in binary ::text form : ) therefore except does not work
     -- 0101000000197B8A77DBE0E33F18C25725ECC34740 expected

@@ -1,6 +1,4 @@
 {#
-DESACTIVE par défaut, gardé à titre d'exemple de array_linked
-
 Example d'exploitation - calcul d'indicateurs agrégés classiques, par commune :
 - min et max, de numeric
 - ensemble des valeurs rencontrées (dans une commune donc), pour une valeur de dictionnaire
@@ -11,15 +9,17 @@ Example d'exploitation - calcul d'indicateurs agrégés classiques, par commune 
 
 {{
   config(
-    enabled=var("enableArrayLinked", false) | as_bool,
     materialized="view",
   )
 }}
 
-{% set source_model = ref('apcom_std_supportaerien_exemple_commune_array_demo_enriched') %}
+{% set source_model = ref('apcom_std_supportaerien_commune_demo_enriched') %}
 
 select
-    count(*) as "{{ fieldPrefixInd }}count",
+
+    -- AODE :
+    "data_owner_id" as data_owner_id,
+    MIN("data_owner_label") as data_owner_label,
 
     {# semantized names version
     "{{ fieldPrefix }}fdrcom_insee_id" as fdrcommune_insee_id,
@@ -32,6 +32,8 @@ select
     MIN("reg_code") as reg_code,
     MIN("reg_name") as reg_name,
 
+    count(*) as "{{ fieldPrefixInd }}count",
+
     MIN("{{ fieldPrefix }}HauteurAppui") as "{{ fieldPrefixInd }}HauteurAppui__min",
     MAX("{{ fieldPrefix }}HauteurAppui") as "{{ fieldPrefixInd }}HauteurAppui__max",
     AVG("{{ fieldPrefix }}HauteurAppui") as "{{ fieldPrefixInd }}HauteurAppui__avg",
@@ -39,7 +41,6 @@ select
     count(*) / MIN("Population") as "{{ fieldPrefixInd }}count_per_inhabitant",
 
     array_agg(distinct "{{ fieldPrefix }}TypePhysique") as "{{ fieldPrefixInd }}TypePhysique__set",
-
     {{ dbt_utils.pivot('"' + fieldPrefix + 'TypePhysique"', dbt_utils.get_column_values(ref('apcom_std_supportaerien_unified'),
         '"' + fieldPrefix + 'TypePhysique"'), prefix=fieldPrefix + 'TypePhysique__') }},
     array_agg(distinct "{{ fieldPrefix }}Nature") as "{{ fieldPrefixInd }}Nature__set",
@@ -50,14 +51,11 @@ select
         '"' + fieldPrefix + 'Gestionnaire"'), prefix=fieldPrefix + 'Gestionnaire__') }},
     array_agg(distinct "{{ fieldPrefix }}Materiau") as "{{ fieldPrefixInd }}Materiau__set", -- TODO distinct
     {{ dbt_utils.pivot('"' + fieldPrefix + 'Materiau"', dbt_utils.get_column_values(ref('apcom_std_supportaerien_unified'),
-        '"' + fieldPrefix + 'Materiau"'), prefix=fieldPrefix + 'Materiau__') }},
+        '"' + fieldPrefix + 'Materiau"'), prefix=fieldPrefix + 'Materiau__') }}
 
     -- geometry_shape_4326 would rather be gotten from a joined layer / relation :
     --min(geometry_shape_4326) as geometry_shape_4326,
     --min(geometry_center_4326) as geometry_center_4326
-
-    -- for incremental / profiling :
-    current_timestamp as updated_at
     
     from {{ source_model }}
-    group by com_code --"{{ fieldPrefix }}fdrcom_insee_id"
+    group by data_owner_id, com_code --"{{ fieldPrefix }}fdrcom_insee_id"

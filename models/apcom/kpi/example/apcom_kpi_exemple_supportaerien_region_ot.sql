@@ -1,4 +1,5 @@
 {#
+DESACTIVE par défaut
 
 Example de profilage incrémental au fil du temps des données d'une source par le profiler de DBT Hub.
 Si activé (typiquement de manière planifiée : chaque semaine...) :

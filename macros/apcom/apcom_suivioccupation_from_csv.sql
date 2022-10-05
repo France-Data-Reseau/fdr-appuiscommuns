@@ -23,10 +23,11 @@ TODO can't be replaced by from_csv because is the actual definition, BUT could b
 
 select
     {{ dbt_utils.star(def_model,
-        except=[fieldPrefix + 'RefOccupation', fieldPrefix + 'RefEquipement', fieldPrefix + 'DebutOccupation',
+        except=[fieldPrefix + 'RefOccupation', fieldPrefix + 'RefEquipement',
+        fieldPrefix + 'DebutOccupation',
         fieldPrefix + 'Montant', fieldPrefix + 'DureeOccupation' ]) }},
-    "{{ fieldPrefix }}RefOccupation"::uuid, -- TODO Id or support it at parsing and out
-    "{{ fieldPrefix }}RefEquipement"::uuid,
+    "{{ fieldPrefix }}RefOccupation", --::uuid, -- TODO Id or support it at parsing and out
+    "{{ fieldPrefix }}RefEquipement", --::uuid,
     {{ schema }}.to_date_or_null("{{ fieldPrefix }}DebutOccupation"::text, 'YYYY/MM/DD HH24:mi:ss.SSS'::text,
           'YYYY-MM-DDTHH24:mi:ss.SSS'::text) as "{{ fieldPrefix }}DebutOccupation", -- 1987 https://www.ietf.org/rfc/rfc3339.txt
     {{ fdr_francedatareseau.to_numeric_or_null(fieldPrefix + "Montant", source_model) }} as "{{ fieldPrefix }}Montant",

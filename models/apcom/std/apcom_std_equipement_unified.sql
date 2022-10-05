@@ -23,7 +23,7 @@ with unioned as (
 
 {{ dbt_utils.union_relations(relations=[
       ref('apcom_def_equipement_definition'),
-      source_or_test_ref('appuiscommuns', 'apcom_def_equipement')],
+      ref('apcom_src_apcom_equipement')],
    source_column_name='apcomeq_src_relation',)
 }}
 

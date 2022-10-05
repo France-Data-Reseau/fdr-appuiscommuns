@@ -1,5 +1,7 @@
 {#
 Generically parsed
+
+TODO change either FDR_SOURCE_NOM or this file's name
 #}
 
 {{
@@ -17,3 +19,4 @@ Generically parsed
     this,
     def_model=ref(use_case_prefix + '_def_' + FDR_SOURCE_NOM.replace(use_case_prefix + '_', '') + '_definition'),
     srid='4326') }}
+-- TODO 2154

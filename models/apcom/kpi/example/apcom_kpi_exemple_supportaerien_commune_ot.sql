@@ -1,8 +1,10 @@
 {#
+DESACTIVE par défaut
 
 Example de profilage incrémental au fil du temps des données d'une source par le profiler de DBT Hub.
 Si activé (typiquement de manière planifiée : chaque semaine...) :
 - pas de if is_incremental() where profiled_at > (select max(updated_at) from {{ this }}),
+(voir )
 donc toutes les lignes (autant d'indicateurs) sont recalculée A CHAQUE FOIS
 donc idéalement ne l'exécuter que de manière planifiée (chaque semaine...)
 - ou alors mettre une unique_key (période ex. semaine / mois du current_timestamp), sinon en append only i.e. aucune n'est mise à jour.

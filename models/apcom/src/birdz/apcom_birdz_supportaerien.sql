@@ -1,15 +1,25 @@
 {#
+_translated step
 Normalisation vers le modèle de données du cas d'usage "eau potable" des données de type canalisation de la source d'exemple embarquée "echantillon 3"
 
 - OU à chaque fois pour plus de concision et lisibilité select * (les champs en trop sont alors enlevés à la fin par la _definition) ?
 
+Inclus computed (partagé en macro), ainsi qu'add_generic_fields()
+
 assuming no need for exact dedup by src_id or geometry
+
+    materialized="table",
+    indexes=[{'columns': ['"' + fieldPrefix + 'IdSupportAerien"']},
+      {'columns': order_by_fields},
+      {'columns': ['geometry'], 'type': 'gist'},]
+
 #}
 
 {% set containerUrl = 'http://' + 'datalake.francedatareseau.fr' %}
 {% set typeUrlPrefix = containerUrl + '/dc/type/' %}
 {% set type = 'apcom_birdz_deftest' %} -- spécifique à la source ; _2021 ? from this file ? prefix:typeName ?
 {% set type = 'appuiscommuns_supportaerien' %} -- _2021 ? from this file ? prefix:typeName ?
+{% set fdr_namespace = 'supportaerien.' + var('fdr_namespace') %} -- ?
 {% set ns = 'supportaerien.appuiscommuns.francedatareseau.fr' %} -- ?
 {% set typeName = 'SupportAerien' %}
 {% set sourcePrefix = 'birdzsup' %} -- ?
@@ -24,21 +34,14 @@ assuming no need for exact dedup by src_id or geometry
 
 {{
   config(
-    materialized="table",
-    indexes=[{'columns': ['"' + fieldPrefix + 'Id"']},
-      {'columns': order_by_fields},
-      {'columns': ['geometry'], 'type': 'gist'},]
+    materialized="view",
   )
 }}
 
-{% set sourceModel = source_or_test_ref('appuiscommuns', 'apcom_birdz_supportaerien') %} -- TODO raw_
+{% set sourceModel = ref('apcom_src_apcom_equip_birdz_parsed') if not (var('use_example') | as_bool) else ref('apcom_birdz_example_stg') %}
 
 with source as (
 
-    {#-
-    Normally we would select from the table here, but we are using seeds to load
-    our data in this project
-    #}
     select * from {{ sourceModel }}
     {% if var('limit', 0) > 0 %}
     LIMIT {{ var('limit') }}
@@ -49,11 +52,13 @@ with source as (
 renamed as (
 
     select
-        '{{ sourceModel }}' as "{{ fieldPrefix }}src_name", -- source name (else won't have it anymore once unified with other sources)
+        *, -- TODO if test to debug / find conversion root error, else source('france-data-reseau', 'fdr_def_generic_fields_definition')
+
         --id as "{{ fieldPrefix }}src_index", -- index in source
+        "PDR_NUM,C,254"::text as "{{ fieldPrefix }}src_id", -- source own id
+        "PDR_NUM,C,254"::text as "{{ fieldPrefix }}IdSupportAerien", -- source own id
         replace("ADR_POS_X,C,254"::text, ',', '.')::float as "x", -- from French number format
         replace("ADR_POS_Y,C,254"::text, ',', '.')::float as "y", -- from French number format
-        "PDR_NUM,C,254"::text as "{{ fieldPrefix }}src_id", -- source own id
         "POSE_DATE,C,254"::text as "{{ sourceFieldPrefix }}DateConstruction__s", -- 15/10/2021 TODO Q Date Construction ??
         "ADR_NUM_VO,C,254"::text as "{{ sourceFieldPrefix }}ADR_NUM_VO", -- 999 (text because could be 1bis)
         "ADR_NOM_RU,C,254"::text as "{{ sourceFieldPrefix }}ADR_NOM_RU", -- ROUTE DE KERGONAN
@@ -76,8 +81,7 @@ parsed as (
 
     select
         *,
-        {% if src_priority %}'{{ src_priority }}' || {% endif %}'{{ src_name }}' as "{{ fieldPrefix }}src_priority",  -- 0 is highest, then 10, 100, 1000... src_name added to differenciate
-        uuid_generate_v5(uuid_generate_v5(uuid_ns_dns(), '{{ ns }}'), "{{ fieldPrefix }}src_id") as "{{ fieldPrefix }}Id",
+        --uuid_generate_v5(uuid_generate_v5(uuid_ns_dns(), '{{ ns }}'), "{{ fieldPrefix }}src_id") as "{{ fieldPrefix }}IdSupportAerien", -- NOO rather in add_generic_fields()
         ST_GeomFROMText('POINT(' || cast("x" as text) || ' ' || cast("y" as text) || ')', 4326) as geometry, -- OU geo_point__4326 ? prefix ?? forme ?? ou /et "Geom" ? TODO LATER s'en servir pour réconcilier si < 5m
         {{ schema }}.to_date_or_null("{{ sourceFieldPrefix }}DateConstruction__s", 'DD/MM/YY'::text) as "{{ fieldPrefix }}DateConstruction"
 
@@ -97,7 +101,11 @@ translated as (
 
 ), computed as (
     {{ apcom_supportaerien_translation__computed("translated") }}
+
+), with_generic_fields as (
+    {{ fdr_francedatareseau.add_generic_fields('computed', fieldPrefix, fdr_namespace, src_priority) }}
+
 )
 
-select * from computed
+select * from with_generic_fields
 order by "{{ order_by_fields | join('" asc, "') }}" asc
