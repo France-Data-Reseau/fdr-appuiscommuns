@@ -1,4 +1,6 @@
 {#
+TODO rename dedupe_id
+
 Normalisation vers le modèle de données du cas d'usage "appuiscommuns" des données de type canalisation de la source "osmgeodatamine_powersupports"
 Partie générique (ou spécifique) vers deduped et computed
 

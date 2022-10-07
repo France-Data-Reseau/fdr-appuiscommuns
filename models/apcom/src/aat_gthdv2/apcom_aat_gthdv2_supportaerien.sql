@@ -7,7 +7,7 @@ Normalisation vers le modèle de données du cas d'usage "eau potable" des donn�
 assuming no need for exact dedup by src_id or geometry
 
     materialized="table",
-    indexes=[{'columns': ['"' + fieldPrefix + 'IdSupportAerien"']},
+    indexes=[{'columns': ['"' + fieldPrefix + 'id"']},
       {'columns': order_by_fields},
       {'columns': ['geometry'], 'type': 'gist'},
     ]
@@ -28,6 +28,9 @@ assuming no need for exact dedup by src_id or geometry
 
 with imported as (
     select * from {{ sourceModel }}
+    {% if var('limit', 0) > 0 %}
+    LIMIT {{ var('limit') }}
+    {% endif %}
 
 ), translated as (
     -- TODO & add src_priority (& _name) here ?! in general ASAP (NOT after unification in source type) and NOT in same dbt model as dedup if any !

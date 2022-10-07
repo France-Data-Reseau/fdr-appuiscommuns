@@ -29,7 +29,7 @@ assuming no need for exact dedup by src_id or geometry
 {{
   config(
     materialized="table",
-    indexes=[{'columns': ['"' + fieldPrefix + 'IdEquipement"']},
+    indexes=[{'columns': ['"' + fieldPrefix + 'id"']},
       {'columns': order_by_fields},
       ]
   )

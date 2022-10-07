@@ -8,7 +8,7 @@ make it a table IF needed for further processing before
 OLD 171s with deduped_computed and indexed on Id & geometry
 
     materialized="table",
-    indexes=[{'columns': ['"' + fieldPrefix + 'IdSupportAerien"']},
+    indexes=[{'columns': ['"' + fieldPrefix + 'id"']},
       {'columns': ['geometry'], 'type': 'gist'},]
 #}
 
@@ -28,6 +28,9 @@ OLD 171s with deduped_computed and indexed on Id & geometry
 -- only one source, otherwise dedup would have required to index src_name & priority so would have to be in another, downstream model
 with imported as (
     select * from {{ sourceModel }}
+    {% if var('limit', 0) > 0 %}
+    LIMIT {{ var('limit') }}
+    {% endif %}
 
 ), translated as (
     {{ osm_powsupp__apcom_supportaerien('imported', src_priority) }}

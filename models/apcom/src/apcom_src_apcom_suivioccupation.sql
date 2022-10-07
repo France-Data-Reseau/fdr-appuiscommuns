@@ -9,15 +9,15 @@ adds generic fields (else _src_id/priority and id/uuid NULL), replacing the sour
   )
 }}
 
-{% set field_prefix = "apcomeq_" %}
-{% set fdr_namespace = 'equipement.' + var('fdr_namespace') %} -- ?
+{% set field_prefix = "apcomsuoc_" %}
+{% set fdr_namespace = 'suivioccupation.' + var('fdr_namespace') %} -- ?
 
-{% set source_model = ref('apcom_src_apcom_equipement_parsed') %}
+{% set source_model = ref('apcom_src_apcom_suivioccupation_parsed') %}
 
 with parsed as (
   select
     {{ dbt_utils.star(source_model, except=fdr_francedatareseau.list_generic_fields(field_prefix)) }},
-    "{{ field_prefix }}IdEquipement" as {{ field_prefix }}src_id
+    concat(coalesce("apcomsuoc_RefOccupation","apcomsuoc_RefEquipement"), "apcomsuoc_DebutOccupation") as {{ field_prefix }}src_id
   from {{ source_model }}
   {% if var('limit', 0) > 0 %}
   LIMIT {{ var('limit') }}

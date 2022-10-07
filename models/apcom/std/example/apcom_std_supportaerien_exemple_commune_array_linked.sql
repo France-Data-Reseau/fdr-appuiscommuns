@@ -27,7 +27,7 @@ OLD 176.45s.
     materialized="table",
     indexes=[
       {'columns': ['apcomsup_com_code__arr'], 'type': 'gin'},
-      {'columns': ['"' + fieldPrefix + 'IdSupportAerien"']},
+      {'columns': ['"' + fieldPrefix + 'id"']},
       {'columns': order_by_fields},
       {'columns': ['geometry'], 'type': 'gist'},
     ]
@@ -49,7 +49,7 @@ with apcomsup as (
     {# OLD %- set fields = ['_dbt_source_relation', 'apcomsup_src_priority'] + adapter.get_columns_in_relation(ref('apcom_def_supportaerien_definition')) | map(attribute="name") | list -%#}-- BEWARE without | list it stays a generator that can only be iterated once
     -- (no need to except=[apcomsup_com_code"] because in the ex. osm source it is osmposup_com_code)
     {# OLD % set cols = dbt_utils.star(sourceModel).split(',') %#}
-    {{ apcom_supportaerien_array_link_geometry_commune("apcomsup", id_field=fieldPrefix + "IdSupportAerien", fields=fields) }}
+    {{ apcom_supportaerien_array_link_geometry_commune("apcomsup", id_field=fieldPrefix + "id", fields=fields) }}
 
 )
 

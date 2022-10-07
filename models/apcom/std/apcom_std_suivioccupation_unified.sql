@@ -12,9 +12,13 @@ is a table only if has reconciliation or dedup between sources
     include=dbt_utils.star(ref('apcom_supportaerien_definition')),
 #}
 
+{% set fieldPrefix = 'apcomsuoc_' %}
+
 {{
   config(
-    materialized="table"
+    materialized="incremental",
+    unique_key=fieldPrefix + 'id',
+    tags=["incremental"],
   )
 }}
 
@@ -23,10 +27,14 @@ with unioned as (
 
 {{ dbt_utils.union_relations(relations=[
       ref('apcom_def_suivioccupation_definition'),
-      ref('apcom_src_apcom_suivioccupation_parsed')],
+      ref('apcom_src_apcom_suivioccupation')],
     source_column_name='apcomsuoc_src_relation',)
 }}
 
 )
 
 select * from unioned
+
+{% if is_incremental() %}
+  where last_changed > (select max(last_changed) from {{ this }})
+{% endif %}

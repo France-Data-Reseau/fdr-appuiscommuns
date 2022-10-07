@@ -12,9 +12,13 @@ is a table only if has reconciliation or dedup between sources
     include=dbt_utils.star(ref('apcom_supportaerien_definition')),
 #}
 
+{% set fieldPrefix = 'apcomeq_' %}
+
 {{
   config(
-    materialized="table"
+    materialized="incremental",
+    unique_key=fieldPrefix + 'id',
+    tags=["incremental"],
   )
 }}
 
@@ -23,10 +27,17 @@ with unioned as (
 
 {{ dbt_utils.union_relations(relations=[
       ref('apcom_def_equipement_definition'),
+      ref('apcom_birdz_equipement'),
       ref('apcom_src_apcom_equipement')],
-   source_column_name='apcomeq_src_relation',)
+    include=(adapter.get_columns_in_relation(ref('apcom_def_equipement_definition')) | map(attribute='name') | list)
+        + fdr_francedatareseau.list_generic_fields(fieldPrefix) + fdr_francedatareseau.list_import_fields(),
+    source_column_name='apcomeq_src_relation',)
 }}
 
 )
 
 select * from unioned
+
+{% if is_incremental() %}
+  where last_changed > (select max(last_changed) from {{ this }})
+{% endif %}

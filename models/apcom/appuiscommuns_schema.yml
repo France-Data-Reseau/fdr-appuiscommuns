@@ -97,7 +97,7 @@ models:
         tests:
           - not_null
           - relationships:
-              to: source("france-data-reseau", "fdr_src_communes_ods")
+              to: source("france-data-reseau", "fdr_std_communes_ods")
               field: '"com_code"'
               #description: 'zzztest' # KO macro 'dbt_macro__test_relationships' takes no keyword argument 'description'
               config:

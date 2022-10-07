@@ -1,5 +1,7 @@
 {#
 2 phase deduplication : phase 1 - first creates matching pairs (according to provided SQL criteria),
+supports DBT incremental (filtered on later.last_changed whose max is added as a dummy marker line, use it with
+unique_key=['"earlier' + fieldPrefix + "IdSupportAerien" + '"', '"later' + fieldPrefix + "IdSupportAerien" + '"'])
 
 TODO obviously faster if indexed on id fields (source name and id : _src_name, _src_id)
 TODO and additional order fields
@@ -24,7 +26,8 @@ returns merged lines of data with :
 
 -- TODO apcom_supportaerien_translation__dup_geometry : first step producing only duplicates,
 -- that can be merged according to the expert choices afterwards (rather than static rules)
-{% macro apcom_supportaerien_dedupe_geometry_candidates(normalized_source_model_name, id_field, order_by_fields, fields, criteria) %}
+{% macro apcom_supportaerien_dedupe_geometry_candidates(normalized_source_model_name,
+    id_field, order_by_fields, geometry_field, criteria) %}
 
 {% set fieldPrefix = 'apcomsup_' %} -- for debug purpose only
 
@@ -53,7 +56,9 @@ with link_candidates as (
         ---- later."{{ src_id_field }}" as "later{{ src_id_field }}",
         ---- later."{{ id_field }}" as "later{{ id_field }}"
 
-        , earlier.geometry as earlier_geometry, later.geometry as later_geometry -- for debugging purpose
+        , later.last_changed as later_last_changed
+
+        , earlier."{{ geometry_field }}" as earlier_geometry, later."{{ geometry_field }}" as later_geometry -- for debugging purpose
     FROM {{ ref(normalized_source_model_name) }} earlier, {{ ref(normalized_source_model_name) }} later
     WHERE
     -- preference of data among lines (which is earliest in "earlier" / left side), according to order_by :
@@ -73,11 +78,18 @@ with link_candidates as (
     ----earlier."{{ src_name_field }}" < later."{{ src_name_field }}" -- only between different sources
     --and earlier."{{ src_id_field }}" < later."{{ src_id_field }}" -- ONLY IF WERE IN SAME SOURCE assuming _src_id is the model's ordering field
     and {{ criteria }}
-    --ST_Distance(ST_Transform(earlier.geometry, 3857), ST_Transform(later.geometry, 3857)) < {{ distance_m }} -- requires transform because 4326 distance is in degrees ; assuming geometry's not NULL
+    --ST_Distance(ST_Transform(earlier."{{ geometry_field }}", 3857), ST_Transform(later."{{ geometry_field }}", 3857)) < {{ distance_m }} -- requires transform because 4326 distance is in degrees ; assuming geometry's not NULL
     -- within box is more efficient https://postgis.net/workshops/postgis-intro/knn.html :
-    --and ST_Expand(earlier.geometry, {{ distance_m }}) && later.geometry -- TODO REQUIRES CONVERT and then ST_Within faster
+    --and ST_Expand(earlier."{{ geometry_field }}", {{ distance_m }}) && later."{{ geometry_field }}" -- TODO REQUIRES CONVERT and then ST_Within faster
     -- see https://gis.stackexchange.com/questions/93936/searching-planet-osm-point-by-longitude-and-latitude/93957#93957 https://gis.stackexchange.com/questions/94886/st-expand-return-different-results-depending-on-meters
-    --and ST_DWithin(way, ST_Transform(later.geometry, 3857),
+    --and ST_DWithin(way, ST_Transform(later."{{ geometry_field }}", 3857),
+
+    --and 1 = (1+1) -- test incremental without table already existing
+    {% if is_incremental() %}
+      --and later.last_changed <= '2022-09-30T15:30:28' -- test incremental in the middle, or change the later_last_changed column
+      and later.last_changed > (select max(max_sup.later_last_changed) from {{ this }} max_sup where max_sup."earlier_geometry" is NULL)
+    {% endif %}
+
     ORDER BY
     {% for order_by_field in order_by_fields %}
       "earlier{{ order_by_field }}" asc,
@@ -91,5 +103,27 @@ with link_candidates as (
     ---- later."{{ src_name_field }}" asc, later."{{ src_id_field }}" asc
 )
 select * from link_candidates
+
+-- adding last_changed of processed data lines :
+UNION ALL
+(
+    select
+        {% for field in id_and_order_by_fields %}
+          'INCREMENTAL_MAX_DUMMY' as "earlier{{ field }}",
+        {% endfor %}
+        {% for field in id_and_order_by_fields %}
+          'INCREMENTAL_MAX_DUMMY' as "later{{ field }}",
+        {% endfor %}
+        ---- earlier."{{ src_name_field }}" as "earlier{{ src_name_field }}",
+        ---- earlier."{{ src_id_field }}" as "earlier{{ src_id_field }}", -- to be able to order before group by (TODO Q but does it use it ?)
+        ---- earlier."{{ id_field }}" as "earlier{{ id_field }}",
+        ---- later."{{ src_name_field }}" as "later{{ src_name_field }}",
+        ---- later."{{ src_id_field }}" as "later{{ src_id_field }}",
+        ---- later."{{ id_field }}" as "later{{ id_field }}"
+
+        (select max(last_changed) from {{ ref(normalized_source_model_name) }}) as later_last_changed
+
+        , NULL as earlier_geometry, NULL as later_geometry -- for debugging purpose
+)
 
 {% endmacro %}

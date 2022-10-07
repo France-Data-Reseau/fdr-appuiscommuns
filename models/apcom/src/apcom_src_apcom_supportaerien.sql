@@ -19,6 +19,9 @@ with parsed as (
     {{ dbt_utils.star(source_model, except=fdr_francedatareseau.list_generic_fields(field_prefix)) }},
     "{{ field_prefix }}IdSupportAerien" as {{ field_prefix }}src_id
   from {{ source_model }}
+  {% if var('limit', 0) > 0 %}
+  LIMIT {{ var('limit') }}
+  {% endif %}
 
 ), with_generic_fields as (
     {{ fdr_francedatareseau.add_generic_fields('parsed', field_prefix, fdr_namespace, src_priority='0') }}

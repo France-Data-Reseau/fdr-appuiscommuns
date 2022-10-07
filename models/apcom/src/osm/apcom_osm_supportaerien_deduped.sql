@@ -12,7 +12,7 @@ applies exact dedup by src_id and geometry
 
   config(
     materialized="table",
-    indexes=[{'columns': ['"' + fieldPrefix + 'IdSupportAerien"']},
+    indexes=[{'columns': ['"' + fieldPrefix + 'id"']},
       {'columns': order_by_fields},
       {'columns': ['geometry'], 'type': 'gist'},
       {'columns': ['geometry_2154'], 'type': 'gist'},]

@@ -12,9 +12,13 @@ is a table only if has reconciliation or dedup between sources
     include=dbt_utils.star(ref('apcom_supportaerien_definition')),
 #}
 
+{% set fieldPrefix = 'apcomoc_' %}
+
 {{
   config(
-    materialized="table"
+    materialized="incremental",
+    unique_key=fieldPrefix + 'id',
+    tags=["incremental"],
   )
 }}
 
@@ -30,3 +34,7 @@ with unioned as (
 )
 
 select * from unioned
+
+{% if is_incremental() %}
+  where last_changed > (select max(last_changed) from {{ this }})
+{% endif %}

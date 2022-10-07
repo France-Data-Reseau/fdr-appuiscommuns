@@ -16,6 +16,5 @@ sources:
     #meta: {<dictionary>}
     #tags: [<string>]
     tables:
-      - name: "fdr_src_communes_ods"
-      - name: "fdr_src_regions_ods"
-      - name: "fdr_src_demographie_communes_2014_typed"
+      - name: "fdr_std_communes_ods"
+      - name: "fdr_std_regions_ods"

@@ -81,14 +81,5 @@ select
 )
 select
     indicators.*
-    --,
-    --region."Geo Point", -- as geo_point_geojson, -- geojson for easy display NOO missing POINT( before 47.1,1.3 in osm so not geojson ! ; rename region."Geo Point" else error in _ot : syntax error at or near "text"LINE 8:                add column Geo Point text,
-    --region."Geo Shape" -- as geo_shape_geojson -- geojson for easy display !
-    ----region.geo_point_4326,
-    ----region.geo_shape_4326 -- not useful here, not in CKAN import but in its transformation
     from indicators
-    -- enrich with region : TODO move that to -region-enriched view
-    ----{# left join {{ ref('georef-france-region.csv') }} region #} -- LEFT join sinon seulement les lignes qui ont une valeur !! TODO indicateur count pour le vérifier
-    ----left join {{ source('france-data-reseau','fdr_src_regions_ods') }} region --  LEFT join sinon seulement les lignes qui ont une valeur !! TODO indicateur count pour le vérifier
-    ----    on "reg_code" = region."Code Officiel Région"
     --order by day asc -- not needed for charts, only for dev

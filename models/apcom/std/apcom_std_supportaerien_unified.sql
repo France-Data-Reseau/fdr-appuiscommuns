@@ -25,8 +25,10 @@ is a table only if has reconciliation or dedup between sources
 -- TODO on _src_id car IdSupportAerien pas unique globalement !(?)
 {{
   config(
-    materialized="view",
-    indexes=[{'columns': ['"' + fieldPrefix + 'IdSupportAerien"']},
+    materialized="incremental",
+    unique_key=fieldPrefix + 'id',
+    tags=["incremental"],
+    indexes=[{'columns': ['"' + fieldPrefix + 'id"']},
       {'columns': order_by_fields},
       {'columns': ['geometry'], 'type': 'gist'},]
   )
@@ -41,6 +43,8 @@ with unioned as (
       ref('apcom_birdz_supportaerien'),
       ref('apcom_aat_gthdv2_supportaerien'),
       ref('apcom_src_apcom_supportaerien')],
+    include=(adapter.get_columns_in_relation(ref('apcom_def_supportaerien_definition')) | map(attribute='name') | list)
+        + fdr_francedatareseau.list_generic_fields(fieldPrefix) + fdr_francedatareseau.list_import_fields(),
     source_column_name='apcomsup_src_relation',
     column_override={"geometry": "geometry", "geometry_2154": "geometry"})
 }}
@@ -50,7 +54,11 @@ with unioned as (
 select *
 -- adding stored geo field used to compute distances in dedupe :
 , ST_Transform(geometry, 2154) as geometry_2154
+, ST_X(geometry) as x, ST_Y(geometry) as y
 from unioned
--- TOO LONG same order by as for _deduped :
---order by apcomsup_src_priority asc, apcomsup_src_id asc
-order by "{{ order_by_fields | join('" asc, "') }}" asc
+-- same order by as for _deduped : not really too long but index on it is enough
+----order by "{{ order_by_fields | join('" asc, "') }}" asc -- NOO too long, index on it is enough
+
+{% if is_incremental() %}
+  where last_changed > (select max(last_changed) from {{ this }})
+{% endif %}

@@ -19,8 +19,8 @@ Décompte total, segmenté par occupant télécoms , technologie et cheminement
 =>
 exploitant électrique => apcomsup_Gestionnaire
 occupant télécoms => apcomoc_Gestionnaire
-cheminement => apcomoc_Reseau : DI (distribution), RA (raccordement) repris de gthdv2 ; soit le câble est de collecte (départemental), soit de transport (vers ville), soit DI RA on se rapproche de l'abonné
 technologie => apcomoc_Technologie
+cheminement => apcomoc_Reseau : DI (distribution), RA (raccordement) repris de gthdv2 ; soit le câble est de collecte (départemental), soit de transport (vers ville), soit DI RA on se rapproche de l'abonné
 TODO conventions => label / code dans apcomsuoc_Convention
 mise en page / ordonnancement : d'abord le découpage géographique, et après le découpage métier
 
@@ -63,11 +63,13 @@ select
 
     count(*) as "{{ fieldPrefixInd }}all_count",
 
+    -- fin occupation :
     COUNT(*) filter (where "{{ fieldPrefixInd }}expire" = True) as "{{ fieldPrefixInd }}expire",
     COUNT(*) filter (where "{{ fieldPrefixInd }}expire_avant_1_an" = True) as "{{ fieldPrefixInd }}expire_avant_1_an",
     COUNT(*) filter (where "{{ fieldPrefixInd }}expire_avant_3_ans" = True) as "{{ fieldPrefixInd }}expire_avant_3_ans",
     COUNT(*) filter (where "{{ fieldPrefixInd }}expire_avant_5_ans" = True) as "{{ fieldPrefixInd }}expire_avant_5_ans",
 
+    -- déploiement fibre et dépose cuivre : (mais aussi dans les pivots)
     COUNT(*) filter (where "apcomoc_Technologie" = 'CUIVRE') as "{{ fieldPrefixInd }}cuivre_count",
     COUNT(*) filter (where "apcomoc_Technologie" = 'FIBRE') as "{{ fieldPrefixInd }}fibre_count",
 
@@ -93,14 +95,5 @@ select
 
 select
     indicators.*
-    --,
-    --region."Geo Point", -- as geo_point_geojson, -- geojson for easy display NOO missing POINT( before 47.1,1.3 in osm so not geojson ! ; rename region."Geo Point" else error in _ot : syntax error at or near "text"LINE 8:                add column Geo Point text,
-    --region."Geo Shape" -- as geo_shape_geojson -- geojson for easy display !
-    ----region.geo_point_4326,
-    ----region.geo_shape_4326 -- not useful here, not in CKAN import but in its transformation
     from indicators
-    -- enrich with region : TODO move that to -region-enriched view
-    ----{# left join {{ ref('georef-france-region.csv') }} region #} -- LEFT join sinon seulement les lignes qui ont une valeur !! TODO indicateur count pour le vérifier
-    ----left join {{ source('france-data-reseau','fdr_src_regions_ods') }} region --  LEFT join sinon seulement les lignes qui ont une valeur !! TODO indicateur count pour le vérifier
-    ----    on "reg_code" = region."Code Officiel Région"
     --order by day asc -- not needed for charts, only for dev

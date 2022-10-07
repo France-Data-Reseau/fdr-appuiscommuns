@@ -9,7 +9,7 @@ Inclus computed (partagé en macro), ainsi qu'add_generic_fields()
 assuming no need for exact dedup by src_id or geometry
 
     materialized="table",
-    indexes=[{'columns': ['"' + fieldPrefix + 'IdSupportAerien"']},
+    indexes=[{'columns': ['"' + fieldPrefix + 'id"']},
       {'columns': order_by_fields},
       {'columns': ['geometry'], 'type': 'gist'},]
 

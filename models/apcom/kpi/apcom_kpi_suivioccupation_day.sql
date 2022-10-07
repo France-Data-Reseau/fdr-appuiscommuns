@@ -17,9 +17,9 @@ Décompte total, segmenté par matériau
 Décompte total, segmenté par exploitant électrique
 Décompte total, segmenté par occupant télécoms , technologie et cheminement
 =>
-exploitant électrique => apcomsupp_Gestionnaire
-technologie => apcomoc_Technologie
+exploitant électrique => apcomsup_Gestionnaire
 occupant télécoms => apcomoc_Gestionnaire
+technologie => apcomoc_Technologie
 cheminement => apcomoc_Reseau : DI (distribution), RA (raccordement) repris de gthdv2 ; soit le câble est de collecte (départemental), soit de transport (vers ville), soit DI RA on se rapproche de l'abonné
 TODO conventions => label / code dans apcomsuoc_Convention
 mise en page / ordonnancement : d'abord le découpage géographique, et après le découpage métier
@@ -42,7 +42,6 @@ Cette représentation pourra être déclinée à différentes échelles géograp
 }}
 
 with suocc as (
-  {# select * from {{ source_or_test_ref('TODO', 'apcom_std_suivioccupation') }} #}
   select *,
     -- adding default apcomsuoc_DureeOccupation else removes those before 2018 (1950...) :
     ("apcomsuoc_DebutOccupation" + coalesce("apcomsuoc_DureeOccupation", 7300)) as "apcomsuoc_FinOccupation"
@@ -51,7 +50,9 @@ with suocc as (
 
 ), occupation_date_range as (
 
-  select min("apcomsuoc_DebutOccupation") as start_date, now() as end_date
+  select
+    min("apcomsuoc_DebutOccupation") as start_date,
+    max("apcomsuoc_FinOccupation") as end_date
   from suocc
   -- where meaningful for chosen indicators...
 
@@ -63,53 +64,17 @@ with suocc as (
 
 ), suocc_day_pairs as (
 
-  select *
+  select
+    "apcomsuoc_FinOccupation" < now() as {{ fieldPrefixInd }}expire,
+    "apcomsuoc_FinOccupation" BETWEEN now() and now() + INTERVAL '1 year' as {{ fieldPrefixInd }}expire_avant_1_an,
+    "apcomsuoc_FinOccupation" - now() BETWEEN INTERVAL '1 years 1 day' and INTERVAL '3 years' as {{ fieldPrefixInd }}expire_avant_3_ans,
+    "apcomsuoc_FinOccupation" - now() BETWEEN INTERVAL '3 years 1 day' and INTERVAL '5 years' as {{ fieldPrefixInd }}expire_avant_5_ans,
+    *
   from suocc, days d
   where d.day between suocc."apcomsuoc_DebutOccupation" and suocc."apcomsuoc_FinOccupation"
-
-{#
-), suocc_day_pairs_enriched as (
-
-select
-    suoccd.*,
-    -- list all fields except import fields that would conflict :
-    {{ dbt_utils.star(ref('apcom_std_occupation_unified'), relation_alias="occ",
-        except=fdr_francedatareseau.list_import_fields()) }},
-    {# prefix="occ_", }
-    {{ dbt_utils.star(ref('apcom_std_supportaerien_unified'), relation_alias="sup",
-        except=fdr_francedatareseau.list_import_fields()) }},
-    {# prefix="sup_",  }
-
-    -- AODE :
-    -- already within above fields
-
-    -- reg & com (outside geo) :
-    com.com_code,
-    com.com_name,
-    com.epci_code,
-    com.epci_name,
-    com.dep_code,
-    com.dep_name,
-    com.reg_code,
-    com.reg_name
-
-    from suocc_day_pairs suoccd
-        -- TODO TODO join on fields unique across data_owner_id / FDR_SIREN !
-        join {{ ref('apcom_std_occupation_unified') }} occ on suoccd."apcomsuoc_RefOccupation" = occ."apcomoc_IdOccupation"
-        join {{ ref('apcom_std_equipement_unified') }} eq on occ."apcomoc_RefEquipement" = eq."apcomeq_IdEquipement"
-        join {{ ref('apcom_std_supportaerien_unified') }} sup on eq."apcomeq_RefSupportAerien" = sup."apcomsup_IdSupportAerien"
-        left join {{ ref('apcom_std_supportaerien_fdrcommune_linked') }} supcom -- LEFT join sinon seulement les lignes qui ont une valeur !!
-                on sup."apcomsup_IdSupportAerien" = supcom."apcomsup_IdSupportAerien" -- on sup."com_code" = supcom."com_code"
-
-        -- no need to join to AODE, because no more of its fields are required.
-        -- no need to join also to commune, because the very common fields we require have already been included in the link table NO NOT ALL :
-        left join {{ source('france-data-reseau', 'fdr_src_communes_ods') }} com -- LEFT join sinon seulement les lignes qui ont une valeur !!
-                on supcom.com_code = com.com_code
-    -- add reg_code and commune in _enriched NOOO using "specific" enriched : apcom_supportaerien_fdrcommune_linked
-#}
 
 )
 select
     *
-    from suocc_day_pairs -- suocc_day_pairs_enriched
+    from suocc_day_pairs
     --order by day asc -- not needed for charts, only for dev

@@ -18,8 +18,8 @@ Décompte total, segmenté par exploitant électrique
 Décompte total, segmenté par occupant télécoms , technologie et cheminement
 =>
 exploitant électrique => apcomsupp_Gestionnaire
-technologie => apcomoc_Technologie
 occupant télécoms => apcomoc_Gestionnaire
+technologie => apcomoc_Technologie
 cheminement => apcomoc_Reseau : DI (distribution), RA (raccordement) repris de gthdv2 ; soit le câble est de collecte (départemental), soit de transport (vers ville), soit DI RA on se rapproche de l'abonné
 TODO conventions => label / code dans apcomsuoc_Convention
 mise en page / ordonnancement : d'abord le découpage géographique, et après le découpage métier
@@ -41,7 +41,6 @@ On représentera donc sur histogramme l'évolution du nombre total d'appuis conc
 }}
 
 with suocc as (
-  {# select * from {{ source_or_test_ref('TODO', 'apcom_std_suivioccupation') }} #}
   select *,
     -- adding default apcomsuoc_DureeOccupation else removes those before 2018 (1950...) :
     ("apcomsuoc_DebutOccupation" + coalesce("apcomsuoc_DureeOccupation", 7300)) as "apcomsuoc_FinOccupation"
