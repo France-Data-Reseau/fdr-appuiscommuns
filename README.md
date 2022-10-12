@@ -4,6 +4,11 @@ Ce projet dbt (Data Build Tool) est consacré au cas d'usage Appuis Communs, dan
 
 See Install, build & run and FAQ / Gotchas in fdr-france-data-reseau.
 
+Regular (incremental) run :
+```bash
+dbt run --target prod --select apcom.src tag:incremental
+```
+
 ## Provides
 
 - models :

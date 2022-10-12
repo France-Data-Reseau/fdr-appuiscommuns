@@ -60,5 +60,5 @@ from unioned
 ----order by "{{ order_by_fields | join('" asc, "') }}" asc -- NOO too long, index on it is enough
 
 {% if is_incremental() %}
-  where last_changed > (select max(last_changed) from {{ this }})
+  where last_changed > (select coalesce(max(last_changed), '1970-01-01T00:00:00') from {{ this }})
 {% endif %}
