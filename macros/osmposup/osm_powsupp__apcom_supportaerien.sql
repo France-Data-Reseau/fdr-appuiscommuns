@@ -71,7 +71,7 @@ rename and generic parsing is rather done
 
     select
         *,
-        --uuid_generate_v5(uuid_generate_v5(uuid_ns_dns(), '{{ ns }}}}'), "{{ fieldPrefix }}src_id") as "{{ fieldPrefix }}IdSupportAerien", -- NOO rather in add_generic_fields()
+        --uuid_generate_v5(uuid_generate_v5(uuid_ns_dns(), '{{ ns }}}}'), "{{ fieldPrefix }}src_id") as "{{ fieldPrefix }}IdSupportAerien", -- NOO rather _id generic uuid in add_generic_fields() else not consistent between "source" and "echange" formats
         ST_GeomFROMText('POINT(' || cast("{{ sourceFieldPrefix }}X" as text) || ' ' || cast("{{ sourceFieldPrefix }}Y" as text) || ')', 4326) as geometry, -- OU prefix ? forme ?? ou /et "Geom" ? TODO LATER s'en servir pour réconcilier si < 5m
         {{ schema }}.to_numeric_or_null("{{ fieldPrefix }}HauteurAppui__s") as "{{ fieldPrefix }}HauteurAppui" -- TODO Hauteur ! hauteur ? __m ??
 

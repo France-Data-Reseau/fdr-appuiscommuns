@@ -1,0 +1,11 @@
+version: 2
+
+sources:
+  - name: "france-data-reseau" # TODO _source or one file per folder / source
+    description: les données externes partagées immportées dans appuiscommuns (par CKAN IHM ou API, ou connexion SQL ex. Airbyte ELT)
+    schema: "france-data-reseau{{ '' if target.name == 'prod' else '_' ~ target.name }}"
+    #meta: {<dictionary>}
+    #tags: [<string>]
+    tables:
+      - name: "fdr_std_communes_ods"
+      - name: "fdr_std_regions_ods"

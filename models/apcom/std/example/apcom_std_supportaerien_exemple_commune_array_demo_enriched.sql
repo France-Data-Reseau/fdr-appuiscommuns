@@ -32,7 +32,7 @@ select
     -- demo :
     {{ dbt_utils.star(source('france-data-reseau', 'fdr_src_demographie_communes_2014_typed')) }} -- _id is most probably added by CKAN to all imports
     from {{ source_model }} apcomsup
-    CROSS JOIN unnest(apcomsup."apcomsup_com_code__arr") apcomsuparr("apcomsup_com_code__arr_u")
+    CROSS JOIN unnest(apcomsup."apcomsup_com_code__arr") apcomsuparr("apcomsup_com_code__arr_u") -- TODO rather any() https://stackoverflow.com/questions/68418462/how-to-use-postgresql-array-in-where-in-clause
     left join {{ source('france-data-reseau', 'fdr_src_communes_ods') }} com -- LEFT join sinon seulement les lignes qui ont une valeur !! TODO indicateur count pour le vérifier
         on apcomsuparr."apcomsup_com_code__arr_u" = com.com_code
     left join {{ source('france-data-reseau', 'fdr_src_demographie_communes_2014_typed') }} demo -- LEFT join sinon seulement les lignes qui ont une valeur !! TODO indicateur count pour le vérifier

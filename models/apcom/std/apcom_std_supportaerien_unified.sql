@@ -1,21 +1,8 @@
 {#
-Unification des données normalisées de toutes les sources de type appuiscommuns.supportaerien
+Unification des données normalisées de toutes les sources de type appuiscommuns.supportaerien, en incrémental (table)
 
 60s
-
-Union using dbt_utils helper :
-- _definition (with 0 data lines) as the first unioned relation adds even fields missing in all normalizations, with the right type,
-if they are provided in the official type definition
-- include=dbt_utils.star(_definition) excludes source-specific fields
-- column_override={"geometry": "geometry"} is required else syntax error : cast("geometry" as USER-DEFINED) as "geo...
-see https://github.com/dbt-labs/dbt-utils#union_relations-source
-- source_column_name : apcomsup_src_relation and not default _dbt_source_relation to avoid conflicts in joins
-(TODO Q vs apcomsup_src_name would ?)
-- 
-
-is a table only if has reconciliation or dedup between sources
-    TODO include=dbt_utils.star(ref('acom_def_supportaerien_definition')),
-
+?
       {'columns': ['geometry_2154'], 'type': 'gist'},
 #}
 
