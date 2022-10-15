@@ -69,10 +69,13 @@ select
     count(*) as "{{ fieldPrefixInd }}all_count",
 
     -- fin occupation :
-    COUNT(*) filter (where "{{ fieldPrefixInd }}expire" = True) as "{{ fieldPrefixInd }}expire",
-    COUNT(*) filter (where "{{ fieldPrefixInd }}expire_avant_1_an" = True) as "{{ fieldPrefixInd }}expire_avant_1_an",
-    COUNT(*) filter (where "{{ fieldPrefixInd }}expire_avant_3_ans" = True) as "{{ fieldPrefixInd }}expire_avant_3_ans",
-    COUNT(*) filter (where "{{ fieldPrefixInd }}expire_avant_5_ans" = True) as "{{ fieldPrefixInd }}expire_avant_5_ans",
+    SUM("{{ fieldPrefixInd }}expire") as "{{ fieldPrefixInd }}expire",
+    SUM("{{ fieldPrefixInd }}expire_avant_1_an") as "{{ fieldPrefixInd }}expire_avant_1_an",
+    SUM("{{ fieldPrefixInd }}expire_avant_3_ans") as "{{ fieldPrefixInd }}expire_avant_3_ans",
+    SUM("{{ fieldPrefixInd }}expire_avant_5_ans") as "{{ fieldPrefixInd }}expire_avant_5_ans",
+
+    -- redevance :
+    SUM("{{ fieldPrefixInd }}redevance") as "{{ fieldPrefixInd }}redevance",
 
     -- déploiement fibre et dépose cuivre : (mais aussi dans les pivots)
     COUNT(*) filter (where "apcomoc_Technologie" = 'CUIVRE') as "{{ fieldPrefixInd }}cuivre_count",

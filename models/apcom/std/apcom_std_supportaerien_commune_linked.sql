@@ -22,5 +22,5 @@ OLD 54s on 1m osmposup without indexes on supportaerien, 50s with (so no change)
 
 {% set source_model = ref('apcom_std_supportaerien_unified') %}
 
-{{ apcom_supportaerien_2phase1link_commune_geometry(source_model,
+{{ fdr_francedatareseau.fdr_2phase1link_commune_geometry(source_model,
     id_field=fieldPrefix + "id", geometry_field="geometry") }}

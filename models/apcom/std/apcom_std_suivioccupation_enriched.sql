@@ -18,22 +18,21 @@ Donc le bon point de départ sur tous les indicateurs sur les suivioccupation (e
 
 select
     suocc.*,
+
+    -- adding default apcomsuoc_DureeOccupation else removes those before 2018 (1950...) :
+    -- (used in kpis, TODO move in _unified or even _src ?)
+    case when "apcomsuoc_DebutOccupation" is not null then ("apcomsuoc_DebutOccupation" + coalesce("apcomsuoc_DureeOccupation", 7300)) else null end as "apcomsuoc_FinOccupation",
+
     {{ dbt_utils.star(ref('apcom_std_occupation_unified'), relation_alias="occ",
         except=fdr_francedatareseau.list_import_fields()) }},
     {# prefix="occ_",  #}
+    -- equipement : (actually used in kpi only for redevance Traverse)
+    {{ dbt_utils.star(ref('apcom_std_equipement_unified'), relation_alias="eq",
+        except=fdr_francedatareseau.list_import_fields()) }},
     {{ dbt_utils.star(ref('apcom_std_supportaerien_unified'), relation_alias="supen",
         except=fdr_francedatareseau.list_import_fields()) }},
     {# prefix="sup_",  #}
-    {#
-    --suocc.*,
-    {{ dbt_utils.star(ref('apcom_def_occupation_definition'), relation_alias="occ",
-        except=fdr_francedatareseau.list_import_fields()) }},
-    -- equipement : (actually not used in kpi)
-    {{ dbt_utils.star(ref('apcom_def_equipement_definition'), relation_alias="eq",
-        except=fdr_francedatareseau.list_import_fields()) }},
-    {{ dbt_utils.star(ref('apcom_def_supportaerien_definition'), relation_alias="sup",
-        except=fdr_francedatareseau.list_import_fields()) }},
-    #}
+    {# or instead of except, list fields using using apcom_def_*_definition #}
 
     -- AODE :
     -- already within above fields

@@ -42,9 +42,7 @@ Cette représentation pourra être déclinée à différentes échelles géograp
 }}
 
 with suocc as (
-  select *,
-    -- adding default apcomsuoc_DureeOccupation else removes those before 2018 (1950...) :
-    ("apcomsuoc_DebutOccupation" + coalesce("apcomsuoc_DureeOccupation", 7300)) as "apcomsuoc_FinOccupation"
+  select *
   from {{ ref('apcom_std_suivioccupation_enriched') }}
   where "apcomsuoc_DebutOccupation" is not null -- else can't be used
 
@@ -65,10 +63,15 @@ with suocc as (
 ), suocc_day_pairs as (
 
   select
-    "apcomsuoc_FinOccupation" < now() as {{ fieldPrefixInd }}expire,
-    "apcomsuoc_FinOccupation" BETWEEN now() and now() + INTERVAL '1 year' as {{ fieldPrefixInd }}expire_avant_1_an,
-    "apcomsuoc_FinOccupation" - now() BETWEEN INTERVAL '1 years 1 day' and INTERVAL '3 years' as {{ fieldPrefixInd }}expire_avant_3_ans,
-    "apcomsuoc_FinOccupation" - now() BETWEEN INTERVAL '3 years 1 day' and INTERVAL '5 years' as {{ fieldPrefixInd }}expire_avant_5_ans,
+    -- fin occupation :
+    case when "apcomsuoc_FinOccupation" < now() then 1 else 0 end as {{ fieldPrefixInd }}expire,
+    case when "apcomsuoc_FinOccupation" BETWEEN now() and now() + INTERVAL '1 year' then 1 else 0 end as {{ fieldPrefixInd }}expire_avant_1_an,
+    case when "apcomsuoc_FinOccupation" - now() BETWEEN INTERVAL '1 years 1 day' and INTERVAL '3 years' then 1 else 0 end as {{ fieldPrefixInd }}expire_avant_3_ans,
+    case when "apcomsuoc_FinOccupation" - now() BETWEEN INTERVAL '3 years 1 day' and INTERVAL '5 years' then 1 else 0 end as {{ fieldPrefixInd }}expire_avant_5_ans,
+
+    -- dans le cas d'un suivi d'occupation d'un equipement de Nature Traverse, montant de la redevance associé à la traverse :
+    case when "apcomoc_RefEquipement" is not null and ("apcomeq_Nature" = 'Traverse' or "apcomeq_Nature" = 'traverse') and "apcomsuoc_FinOccupation" > now() then round(27.5*(0.15+85*130/106.2), 2) else 0 end as "{{ fieldPrefixInd }}redevance",
+
     *
   from suocc, days d
   where d.day between suocc."apcomsuoc_DebutOccupation" and suocc."apcomsuoc_FinOccupation"
