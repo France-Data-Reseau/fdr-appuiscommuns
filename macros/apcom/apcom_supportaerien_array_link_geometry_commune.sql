@@ -56,7 +56,7 @@ with link_candidates as (
         c.dep_name, --as "fdrdep_nom",
         c.reg_code, --as "fdrreg_insee_id",
         c.reg_name --as "fdrreg_nom"
-    FROM {{ translated_source }}, {{ source('france-data-reseau', 'fdr_src_communes_ods') }} c
+    FROM {{ translated_source }}, {{ source('france-data-reseau', 'fdr_std_communes_ods') }} c
     {# FROM {{ translated_source }}, {{ ref('georef-france-commune.csv') }} c #}
     --WHERE ST_Contains(ST_GeometryFromText(ST_AsText(c.geo_shape), 4326), {{ translated_source }}.geometry) and c.com_code is not null -- TODO patch source geometry to 4326 SRID
     WHERE ST_Contains(c.geometry, {{ translated_source }}.geometry) and c.com_code is not null -- not worse perfs (5s) ; OLD ! removes communes of Nouvelle Calédonie etc.

@@ -28,7 +28,7 @@ with link_geometry_fdrcommune as (
         -- TODO & _nom ?
         
     from computed
-        left join {{ source('france-data-reseau', 'fdr_src_communes_ods') }} c -- LEFT join sinon seulement les lignes qui ont une valeur !! TODO indicateur count pour le vérifier
+        left join {{ source('france-data-reseau', 'fdr_std_communes_ods') }} c -- LEFT join sinon seulement les lignes qui ont une valeur !! TODO indicateur count pour le vérifier
         on computed."{{ sourceFieldPrefix }}com_code" = c.com_code
 
 & TODO LATER 2 phase dedup : phase 2 that joins on (approved / decided) link_geometry_fdrcommune :
