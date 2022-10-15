@@ -70,7 +70,8 @@ with suocc as (
     case when "apcomsuoc_FinOccupation" - now() BETWEEN INTERVAL '3 years 1 day' and INTERVAL '5 years' then 1 else 0 end as {{ fieldPrefixInd }}expire_avant_5_ans,
 
     -- dans le cas d'un suivi d'occupation d'un equipement de Nature Traverse, montant de la redevance associé à la traverse :
-    case when "apcomoc_RefEquipement" is not null and ("apcomeq_Nature" = 'Traverse' or "apcomeq_Nature" = 'traverse') and "apcomsuoc_FinOccupation" > now() then round(27.5*(0.15+85*130/106.2), 2) else 0 end as "{{ fieldPrefixInd }}redevance",
+    case when "apcomoc_RefEquipement" is not null and ("apcomeq_Nature" = 'Traverse' or "apcomeq_Nature" = 'traverse') and "apcomsuoc_FinOccupation" > now()
+        then round(27.5*(0.15+85*130/106.2)/365, 2) else 0 end as "{{ fieldPrefixInd }}redevance",
 
     *
   from suocc, days d
