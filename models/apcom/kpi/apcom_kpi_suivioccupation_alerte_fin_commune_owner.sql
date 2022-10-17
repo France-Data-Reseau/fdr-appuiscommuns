@@ -1,13 +1,12 @@
 {#
-Indicateurs métier d'occupation, par région - enriched day pairs, ready to be aggregated at whichever geo level as indicators
+Indicateurs métier d'occupation, agrégés par collectivité, commune
 
-TODO :
-voir README
+Version agrégée des indicateurs métier sur suivioccupation (fin occupation, redevance traverse)
+par commune et gestionnaire / data_owner_id (rajouter dépose cuivre, déploiement fibre,
+pivots selon materiau, exploitant, occupant, technologie, réseau convention)
 
 possible macro params :
 - TODO start_date ? end_date ??
-
-du JDB :
 
 du JDB :
 

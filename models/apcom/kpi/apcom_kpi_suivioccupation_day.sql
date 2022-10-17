@@ -1,13 +1,11 @@
 {#
-Indicateurs métier d'occupation, par région - enriched day pairs, ready to be aggregated at whichever geo level as indicators
+Indicateurs métier d'évolution d'occupation, agrégés par collectivité, commune
 
-TODO :
-voir README
+Indicateurs métier d'évolution journalière (mais agrégeable dans Superset
+ex. annuellement pour redevance) sur suivioccupation (fin occupation, redevance traverse)
 
 possible macro params :
 - TODO start_date ? end_date ??
-
-du JDB :
 
 du JDB :
 

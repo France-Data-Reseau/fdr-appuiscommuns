@@ -1,13 +1,12 @@
 {#
-TODO NON
+Indicateurs métier d'évolution d'occupation, agrégés par collectivité, commune
 
-Indicateurs métier d'occupation, par région
+Version agrégée des indicateurs métier d'évolution journalière (mais agrégeable dans Superset
+ex. annuellement pour redevance) sur suivioccupation (fin occupation, redevance traverse)
+par commune et gestionnaire / data_owner_id (rajouter dépose cuivre, déploiement fibre,
+pivots selon materiau, exploitant, occupant, technologie, réseau convention)
 
-Q "view" as in superset ?
 Q rather in Superset ?!
-
-TODO :
-voir README
 
 params :
 - TODO start_date ? end_date ??

@@ -1,5 +1,7 @@
 {#
-Indicateurs métier d'occupation, par région - enriched day pairs, ready to be aggregated at whichever geo level as indicators
+Indicateurs métier d'occupation
+
+Indicateurs métier sur suivioccupation (fin occupation, redevance traverse)
 
 TODO :
 voir README

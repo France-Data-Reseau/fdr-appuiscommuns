@@ -13,17 +13,26 @@ dbt run --target prod --select apcom.src tag:incremental
 
 - models :
   - apcom_kpi_* :
-    - _suivioccupation_alerte_fin(_commune_owner) : indicateurs sur suivioccupation, éventuellement agrégé par commune et gestionnaire / data_owner_id
-    - _suivioccupation_day(_commune_owner) : indicateurs d'évolution sur suivioccupation, éventuellement agrégé par commune et gestionnaire / data_owner_id
+    - _suivioccupation_alerte_fin(_commune_owner) : indicateurs sur suivioccupation (fin occupation, redevance traverse),
+et version agrégée par commune et gestionnaire / data_owner_id (rajouter dépose cuivre, déploiement fibre,
+pivots selon materiau, exploitant, occupant, technologie, réseau convention)
+    - _suivioccupation_day(_commune_owner) : indicateurs d'évolution journalière (mais agrégeable dans Superset
+ex. annuellement pour redevance) sur suivioccupation (fin occupation, redevance traverse),
+et version agrégée par commune et gestionnaire / data_owner_id (rajouter dépose cuivre, déploiement fibre,
+pivots selon materiau, exploitant, occupant, technologie, réseau convention)
     - _supportaerien(_commune_owner) : indicateurs basiques sur supportaerien, éventuellement agrégé par commune et gestionnaire / data_owner_id
   - apcom_std_* :
     - _unified (tables, incrémentales) : modèle d'échange i.e. données normalisées et unifiées entre sources
-    - _enriched : version enrichie par jointure et rapprochement des communes
+    - _enriched : version enrichie par jointure interne et rapprochement des communes
     - _map : produit le geojson pour cartographie dans Superset Deck.gl
     - _commune_linked, _dedupe_candidates (tables, incrémentales) :  stockent les résultats des rapprochements et déduplication
-  - apcom_src_* : translations for osm, birdz, gthdv2, native apcom
+  - apcom_src_* : translations for
+    - osm (supportaerien),
+    - birdz (supportaerien, equipement),
+    - gthdv2 (supportaerien),
+    - native apcom (all types)
   - apcom_def_* : definition & examples (see example data in seeds/) for types supportaerien, equipement, occupation, suivioccupation
 - macros :
-  - near geometry deduplication, commune n-n linking (and example ARRAY linking)
+  - near geometry deduplication (and example ARRAY linking)
   - translation : gthdv2, osm
   - apcom helpers
