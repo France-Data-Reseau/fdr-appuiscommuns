@@ -54,27 +54,28 @@ d.object : ${Object.keys(d.object).join(",")}
 }}
 
 with selected as (
-    select distinct "apcomsup_IdSupportAerien", "apcomoc_Gestionnaire", "apcomoc_Technologie", "apcomoc_Reseau"
+    select distinct "apcomsup_id", "apcomoc_Gestionnaire", "apcomoc_Technologie", "apcomoc_Reseau"
     from {{ ref('apcom_std_suivioccupation_enriched') }}
 
 ), apcomoc_by_sup_ocges as (
-    select "apcomsup_IdSupportAerien", "apcomoc_Gestionnaire",
+    select "apcomsup_id", "apcomoc_Gestionnaire",
         json_strip_nulls(json_agg(json_build_object(
             'apcomoc_Technologie', "apcomoc_Technologie", 'apcomoc_Reseau', "apcomoc_Reseau"
           ))) as apcomoc_occupations_of_gestionnaire
     from selected
-    group by "apcomsup_IdSupportAerien", "apcomoc_Gestionnaire"
+    group by "apcomsup_id", "apcomoc_Gestionnaire"
 
 ), apcomoc_by_sup as (
-    select "apcomsup_IdSupportAerien",
+    select "apcomsup_id",
         json_strip_nulls(json_agg(json_build_object(
             'apcomoc_Gestionnaire', "apcomoc_Gestionnaire", 'occupations', "apcomoc_occupations_of_gestionnaire"
         ))) as apcomoc_occupations_by_gestionnaire
     from apcomoc_by_sup_ocges
-    group by "apcomsup_IdSupportAerien"
+    group by "apcomsup_id"
 )
 
 select
+    sup.*, -- includes apcomsup_DateConstruction, to avoid weird Superset chart error Time column "apcomsuoc_DebutOccupation" does not exist in dataset
     --json_build_object(
     --    'type', 'FeatureCollection',
     --    'features', json_build_array(
@@ -89,4 +90,4 @@ select
         --))
         #>> '{}' as geojson_point -- must be text else Superset error could not identify an equality operator for type json LINE 4: GROUP BY json_build_object https://stackoverflow.com/questions/27215216/postgres-how-to-convert-a-json-string-to-text
 from apcomoc_by_sup
-join {{ ref('apcom_std_supportaerien_unified') }} sup on apcomoc_by_sup."apcomsup_IdSupportAerien" = sup."apcomsup_IdSupportAerien"
+join {{ ref('apcom_std_supportaerien_unified') }} sup on apcomoc_by_sup."apcomsup_id" = sup."apcomsup_id"
