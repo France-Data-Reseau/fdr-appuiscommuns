@@ -73,9 +73,6 @@ select
     SUM("{{ fieldPrefixInd }}expire_avant_3_ans") as "{{ fieldPrefixInd }}expire_avant_3_ans",
     SUM("{{ fieldPrefixInd }}expire_avant_5_ans") as "{{ fieldPrefixInd }}expire_avant_5_ans",
 
-    -- redevance :
-    SUM("{{ fieldPrefixInd }}redevance") as "{{ fieldPrefixInd }}redevance",
-
     -- déploiement fibre et dépose cuivre : (mais aussi dans les pivots)
     COUNT(*) filter (where "apcomoc_Technologie" = 'CUIVRE') as "{{ fieldPrefixInd }}cuivre_count",
     COUNT(*) filter (where "apcomoc_Technologie" = 'FIBRE') as "{{ fieldPrefixInd }}fibre_count",
