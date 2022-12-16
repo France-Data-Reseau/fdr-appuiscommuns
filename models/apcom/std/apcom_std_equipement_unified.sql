@@ -30,5 +30,5 @@ with unioned as (
 select * from unioned
 
 {% if is_incremental() %}
-  where last_changed > (select coalesce(max(last_changed), to_timestamp('1970-01-01T00:00:00', 'YYYY-MM-DDTHH24:MI:SS')) from {{ this }})
+  where last_changed > (select coalesce(max(last_changed), to_timestamp('1970-01-01T00:00:00', 'YYYY-MM-DD"T"HH24:MI:SS')) from {{ this }})
 {% endif %}

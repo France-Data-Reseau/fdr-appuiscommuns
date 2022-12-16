@@ -37,7 +37,7 @@ select
     {{ fdr_francedatareseau.to_numeric_or_null(fieldPrefix + "HauteurTotal", source_model) }} as "{{ fieldPrefix }}HauteurTotal",
     {{ fdr_francedatareseau.to_numeric_or_null(fieldPrefix + "Azimut", source_model) }} as "{{ fieldPrefix }}Azimut",
     {{ schema }}.to_date_or_null("{{ fieldPrefix }}DateConstruction"::text, 'YYYY/MM/DD HH24:mi:ss.SSS'::text,
-      'YYYY-MM-DDTHH24:mi:ss.SSS'::text) as "{{ fieldPrefix }}DateConstruction", -- 1987 https://www.ietf.org/rfc/rfc3339.txt
+      'YYYY-MM-DD"T"HH24:mi:ss.SSS'::text) as "{{ fieldPrefix }}DateConstruction", -- 1987 https://www.ietf.org/rfc/rfc3339.txt
     {{ fdr_francedatareseau.to_numeric_or_null(fieldPrefix + "EffortTransversal", source_model) }} as "{{ fieldPrefix }}EffortTransversal",
     {{ schema }}.to_boolean_or_null("{{ fieldPrefix }}RemonteeAerosout") as "{{ fieldPrefix }}RemonteeAerosout",
     {{ schema }}.to_boolean_or_null("{{ fieldPrefix }}BoisCreosote") as "{{ fieldPrefix }}BoisCreosote",

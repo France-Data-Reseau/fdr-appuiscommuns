@@ -87,7 +87,7 @@ with link_candidates as (
     --and 1 = (1+1) -- test incremental without table already existing
     {% if is_incremental() %}
       --and later.last_changed <= '2022-09-30T15:30:28' -- test incremental in the middle, or change the later_last_changed column
-      and later.last_changed > (select coalesce(max(max_sup.later_last_changed), to_timestamp('1970-01-01T00:00:00', 'YYYY-MM-DDTHH24:MI:SS')) from {{ this }} max_sup where max_sup."earlier_geometry" is NULL)
+      and later.last_changed > (select coalesce(max(max_sup.later_last_changed), to_timestamp('1970-01-01T00:00:00', 'YYYY-MM-DD"T"HH24:MI:SS')) from {{ this }} max_sup where max_sup."earlier_geometry" is NULL)
     {% endif %}
 
     ORDER BY
