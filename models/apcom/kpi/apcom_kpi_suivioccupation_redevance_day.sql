@@ -30,7 +30,7 @@ with suocc as (
       (select end_date from occupation_date_range limit 1)::timestamp, '1 day'::interval) dd
 
 ), index_redevance as (
-  select * from {{ ref('apcom_src_index_redevance_mois_parsed') }}
+  select * from {{ ref('apcom_std_index_redevance_mois_unified') }}
 
 ), suocc_day_pairs as (
 
